@@ -333,12 +333,14 @@
 
         // Select Product and highlight
         function selectProduct(productName, index) {
-            selectedProduct = gameData.products.find(product => product.name === productName);
-            const selectedCard = document.getElementById(`product-${index}`);
-            const allCards = document.querySelectorAll('.option-card');
-            allCards.forEach(card => card.classList.remove('selected'));  // Remove selection from all cards
-            selectedCard.classList.add('selected');  // Highlight the selected product
-        }
+		    const clickSound = document.getElementById("clickSound"); // Get the sound element
+		    clickSound.play();  // Play the sound when a product is selected
+		    selectedProduct = gameData.products.find(product => product.name === productName);
+		    const selectedCard = document.getElementById(`product-${index}`);
+		    const allCards = document.querySelectorAll('.option-card');
+		    allCards.forEach(card => card.classList.remove('selected'));
+		    selectedCard.classList.add('selected');        
+		}
 
         // Show ingredient selection after product selection
         function showIngredientSelection() {
@@ -365,14 +367,17 @@
 
         // Toggle selection of ingredients
         function toggleSelection(card, isCorrect, itemName) {
-            card.classList.toggle('selected');
-            card.setAttribute("data-correct", isCorrect);
-            if (isCorrect) {
-                score += 1;
-            } else {
-                wrongChoices.push(itemName); // Record incorrect choices
-            }
-        }
+    		const clickSound = document.getElementById("clickSound"); // Get the sound element
+		    clickSound.play();  // Play the sound when an ingredient is selected
+		    card.classList.toggle('selected');
+		    card.setAttribute("data-correct", isCorrect);
+		    if (isCorrect) {
+		        score += 1;
+		    } else {
+		        wrongChoices.push(itemName);
+		    }
+		}
+
 
         // Show process selection for Intermediate or Expert
         function showProcessSelection() {
@@ -494,25 +499,205 @@
             }
         }
 
-        // Start the game
-        function selectDifficulty(level) {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+// Start the game based on the selected difficulty
+function selectDifficulty(level) {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
 
-            if (!name || !email) {
-                alert('Please provide your Name and Email.');
-                return;
+    if (!name || !email) {
+        alert('Please provide your Name and Email.');
+        return;
+    }
+
+    // Hide the input section and show the game content
+    document.getElementById('inputSection').style.display = 'none';
+    document.getElementById('gameContent').style.display = 'block';
+
+    selectedDifficulty = level;
+    currentStep = 'product'; // Start from product selection
+
+    // Initialize Timer based on difficulty level
+    let timer = 30;  // Set timer for 30 seconds (can be adjusted based on difficulty)
+    if (selectedDifficulty === 'intermediate') {
+        timer = 45; // Intermediate gets 45 seconds
+    } else if (selectedDifficulty === 'expert') {
+        timer = 60; // Expert gets 60 seconds
+    }
+
+    let countdown; // Timer interval variable
+
+    // Create the timer element and add it to the game content
+    const timerDisplay = document.createElement('p');
+    timerDisplay.setAttribute('id', 'timer');
+    timerDisplay.style.fontSize = '24px'; // Ensure the text is large enough to see
+    timerDisplay.style.fontWeight = 'bold'; // Bold the timer text
+    timerDisplay.style.marginBottom = '20px'; // Add spacing below the timer
+    timerDisplay.style.textAlign = 'center'; // Center the timer text
+    document.getElementById('gameContent').prepend(timerDisplay); // Prepend it to gameContent
+
+    // Start the timer function
+    function startTimer() {
+        countdown = setInterval(function() {
+            timerDisplay.textContent = `Time Left: ${timer}s`;  // Update the text
+            if (timer <= 0) {
+                clearInterval(countdown);
+                showScoreTab(); // Move to score tab when time is up
             }
+            timer--; // Decrease the timer each second
+        }, 1000);
+    }
 
-            document.getElementById('inputSection').style.display = 'none';
-            document.getElementById('gameContent').style.display = 'block';
+    // Start the timer when the game begins
+    startTimer();
 
-            selectedDifficulty = level;
-            currentStep = 'product'; // Start from product selection
+    // Show product selection
+    showProductSelection(); // This ensures the game moves to product selection
 
-            alert(`Welcome, ${name}! You've selected ${level} mode.`);
-            showProductSelection();
+    // Function to update the leaderboard
+    function updateLeaderboard() {
+        const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+        leaderboard.push({ name: document.getElementById('name').value, score: score });
+        leaderboard.sort((a, b) => b.score - a.score); // Sort by score (descending order)
+        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+
+        // Display the leaderboard
+        const leaderboardContent = document.getElementById('leaderboardContent');
+        leaderboardContent.innerHTML = leaderboard.map(entry => `<p>${entry.name}: ${entry.score}</p>`).join('');
+    }
+
+    // Call the updateLeaderboard function when the game ends (inside showScoreTab)
+    updateLeaderboard();
+}
+
+// Show product selection function
+function showProductSelection() {
+    const section = document.createElement('div');
+    section.classList.add('section');
+    section.innerHTML = `
+        <h2>Select a Product</h2>
+        <div class="options-grid">
+            ${gameData.products.map((product, index) => `
+                <div class="option-card" id="product-${index}" onclick="selectProduct('${product.name}', ${index})">
+                    <span class="option-emoji">${product.emoji}</span>
+                    <div class="option-title">${product.name}</div>
+                    <div class="option-desc">${product.desc}</div>
+                </div>
+            `).join('')}
+        </div>
+        <button class="action-btn" onclick="nextStep()">Next</button>
+    `;
+    document.getElementById('gameContent').innerHTML = section.outerHTML;
+}
+
+// Select Product and highlight
+function selectProduct(productName, index) {
+    selectedProduct = gameData.products.find(product => product.name === productName);
+    const selectedCard = document.getElementById(`product-${index}`);
+    const allCards = document.querySelectorAll('.option-card');
+    allCards.forEach(card => card.classList.remove('selected'));
+    selectedCard.classList.add('selected');        
+}
+
+// Show ingredient selection after product selection
+function showIngredientSelection() {
+    shuffleArray(gameData.ingredients[selectedProduct.name]); // Shuffle ingredients
+    totalQuestions = gameData.ingredients[selectedProduct.name].length;  // Set the total questions for this step
+    const section = document.createElement('div');
+    section.classList.add('section');
+    section.innerHTML = `
+        <h2>Select Ingredients for ${selectedProduct.name}</h2>
+        <div class="options-grid">
+            ${gameData.ingredients[selectedProduct.name].map((item, index) => `
+                <div class="option-card" id="ingredient-${index}" onclick="toggleSelection(this, ${item.correct}, '${item.name}')">
+                    <span class="option-emoji">${item.emoji}</span>
+                    <div class="option-title">${item.name}</div>
+                    <div class="option-desc">${item.desc}</div>
+                </div>
+            `).join('')}
+        </div>
+        <button class="action-btn" onclick="nextStep()">Next</button>
+        <button class="back-btn" onclick="previousStep()">Back</button>
+    `;
+    document.getElementById('gameContent').innerHTML = section.outerHTML;
+}
+
+// Toggle selection of ingredients
+function toggleSelection(card, isCorrect, itemName) {
+    card.classList.toggle('selected');
+    card.setAttribute("data-correct", isCorrect);
+    if (isCorrect) {
+        score += 1;
+    } else {
+        wrongChoices.push(itemName);
+    }
+}
+
+// Handle "Next" step based on the game state
+function nextStep() {
+    if (currentStep === 'product') {
+        showIngredientSelection();
+        currentStep = 'ingredient';
+    } else if (currentStep === 'ingredient') {
+        if (selectedDifficulty === 'intermediate' || selectedDifficulty === 'expert') {
+            showProcessSelection();
+            currentStep = 'process';
+        } else {
+            showScoreTab();
+            currentStep = 'score';
         }
+    } else if (currentStep === 'process') {
+        if (selectedDifficulty === 'expert') {
+            showMachinerySelection();
+            currentStep = 'machinery';
+        } else {
+            showScoreTab();
+            currentStep = 'score';
+        }
+    } else if (currentStep === 'machinery') {
+        showScoreTab();
+        currentStep = 'score';
+    }
+}
+
+// Handle "Back" to previous step
+function previousStep() {
+    if (currentStep === 'ingredient') {
+        showProductSelection();
+        currentStep = 'product';
+    } else if (currentStep === 'process') {
+        showIngredientSelection();
+        currentStep = 'ingredient';
+    } else if (currentStep === 'machinery') {
+        showProcessSelection();
+        currentStep = 'process';
+    }
+}
+
+// Show score tab and feedback
+function showScoreTab() {
+    document.getElementById('gameContent').style.display = 'none';
+    document.getElementById('scoreTab').style.display = 'block';
+
+    let percentage = (score / totalQuestions) * 100;
+    let feedbackHTML = `<p>Your score: ${percentage.toFixed(2)}/100</p>`;
+    if (wrongChoices.length > 0) {
+        feedbackHTML += `<p>Incorrect selections: ${wrongChoices.join(', ')}</p>`;
+    } else {
+        feedbackHTML += `<p>Great job! No wrong choices!</p>`;
+    }
+    document.getElementById('scoreSummary').innerHTML = feedbackHTML;
+}
+
+// Restart the game
+function restartGame() {
+    document.getElementById('scoreTab').style.display = 'none';
+    document.getElementById('inputSection').style.display = 'block';
+    document.getElementById('name').value = '';
+    document.getElementById('email').value = '';
+    wrongChoices = [];
+    score = 0;
+    currentStep = 'product';
+}
 
         // Restart the game
         function restartGame() {
