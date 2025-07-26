@@ -12,21 +12,26 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding-top: 40px;
+            background-color: #f8f9fa;  /* Changed to light background */
+            margin: 0;
+            padding: 0;
         }
 
         .game-container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1000px; /* Made the container full width */
             background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            min-height: 80vh; /* Allowing the container to take up more space */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .input-section, .main-content {
@@ -99,6 +104,7 @@
             cursor: pointer;
             font-weight: bold;
             border: none;
+            margin-top: 10px;
         }
 
         .score-summary {
@@ -106,7 +112,7 @@
             padding: 15px;
             margin-top: 20px;
             border-radius: 10px;
-            text-align: center; /* Align score content in center */
+            text-align: center;
         }
 
         .score-summary p {
@@ -128,7 +134,7 @@
             margin-top: 20px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            width: 80%;
+            width: 100%;
             max-width: 500px;
             margin-left: auto;
             margin-right: auto;
@@ -145,6 +151,19 @@
             text-align: center;
         }
 
+        .back-btn {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 15px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .back-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -179,77 +198,108 @@
     <script>
         const gameData = {
             products: [
-                { name: 'Chips', emoji: '🍟', desc: 'Crispy and delicious' },
-                { name: 'Cookies', emoji: '🍪', desc: 'Sweet and chewy' },
-                { name: 'Smoothie', emoji: '🥤', desc: 'Healthy and refreshing' },
+                { 
+                    name: 'Plant-Based Meat', 
+                    emoji: '🍔', 
+                    desc: 'A plant-based meat that mimics the taste and texture of traditional meat.' 
+                },
+                { 
+                    name: '3D-Printed Food', 
+                    emoji: '🖨️', 
+                    desc: 'Food created by 3D printing technology for custom shapes and designs.' 
+                },
+                { 
+                    name: 'Vegan Cheese', 
+                    emoji: '🧀', 
+                    desc: 'Dairy-free cheese made from plant-based ingredients.' 
+                },
+                { 
+                    name: 'Kombucha', 
+                    emoji: '🍹', 
+                    desc: 'A fermented tea beverage with probiotics.' 
+                },
+                { 
+                    name: 'Lab-Grown Meat', 
+                    emoji: '🥩', 
+                    desc: 'Meat grown in a lab without the need for animal slaughter.' 
+                }
             ],
             ingredients: {
-                Chips: [
-                    { name: 'Potatoes', emoji: '🥔', desc: 'Base for chips', correct: true },
-                    { name: 'Salt', emoji: '🧂', desc: 'Flavor enhancer', correct: true },
-                    { name: 'Vegetable Oil', emoji: '🧴', desc: 'For frying', correct: true },
-                    { name: 'Rice Flour', emoji: '🍚', desc: 'Gluten-free flour', correct: false },
-                    { name: 'Butter', emoji: '🧈', desc: 'For frying', correct: false },
-                    { name: 'Garlic', emoji: '🧄', desc: 'Flavor enhancer', correct: false },
-                    { name: 'Lemon', emoji: '🍋', desc: 'Acidity', correct: false },
-                    { name: 'Chili Powder', emoji: '🌶️', desc: 'Spicy flavor', correct: false },
-                    { name: 'Onion', emoji: '🧅', desc: 'For flavor', correct: false },
-                    { name: 'Cheese', emoji: '🧀', desc: 'For flavor', correct: false }
+                'Plant-Based Meat': [
+                    { name: 'Soy Protein', emoji: '🌱', desc: 'A protein-rich ingredient, often used in plant-based foods.', correct: true },
+                    { name: 'Pea Protein', emoji: '🍃', desc: 'A plant-based protein often used in vegan products.', correct: true },
+                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A plant-derived fat used for texture and moisture.', correct: true },
+                    { name: 'Rice Flour', emoji: '🍚', desc: 'A flour used as a binder or thickener in some food products.', correct: false },
+                    { name: 'Chickpea Flour', emoji: '🌾', desc: 'A flour made from chickpeas, commonly used for binding.', correct: false },
+                    { name: 'Lemon Extract', emoji: '🍋', desc: 'Adds a tangy flavor to various food items.', correct: false },
+                    { name: 'Carrot Extract', emoji: '🥕', desc: 'A natural ingredient often used for color and flavor.', correct: true },
+                    { name: 'Vegan Cheese', emoji: '🧀', desc: 'A dairy-free cheese made from various plant-based ingredients.', correct: false },
+                    { name: 'Seaweed', emoji: '🌊', desc: 'A marine plant often used for texture in some dishes.', correct: false },
+                    { name: 'Hemp Oil', emoji: '🌿', desc: 'An oil derived from hemp seeds, used for fat content in food.', correct: false }
                 ],
-                Cookies: [
-                    { name: 'Flour', emoji: '🍚', desc: 'Main ingredient for dough', correct: true },
-                    { name: 'Sugar', emoji: '🍬', desc: 'For sweetness', correct: true },
-                    { name: 'Butter', emoji: '🧈', desc: 'For texture', correct: true },
-                    { name: 'Vegetable Oil', emoji: '🧴', desc: 'Uncommon for cookies', correct: false },
-                    { name: 'Eggs', emoji: '🥚', desc: 'For binding', correct: false },
-                    { name: 'Honey', emoji: '🍯', desc: 'For sweetness', correct: false },
-                    { name: 'Baking Soda', emoji: '🧪', desc: 'Leavening agent', correct: false },
-                    { name: 'Milk', emoji: '🥛', desc: 'For dough consistency', correct: false },
-                    { name: 'Vanilla', emoji: '🍦', desc: 'For flavor', correct: false },
-                    { name: 'Cocoa Powder', emoji: '🍫', desc: 'For flavor', correct: false }
+                '3D-Printed Food': [
+                    { name: 'Chocolate', emoji: '🍫', desc: 'A sweet ingredient used for various food designs.', correct: true },
+                    { name: 'Algae Powder', emoji: '🌿', desc: 'A nutrient-rich ingredient, often used for sustainable nutrition.', correct: true },
+                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet substance often used in food for flavor.', correct: true },
+                    { name: 'Flour', emoji: '🍚', desc: 'A common ingredient used in baking and food binding.', correct: true },
+                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat used in various food products for texture and flavor.', correct: false },
+                    { name: 'Butter', emoji: '🧈', desc: 'A fatty substance used in cooking and baking.', correct: false },
+                    { name: 'Natural Sweeteners', emoji: '🍯', desc: 'Sweeteners derived from natural sources, such as plants.', correct: true },
+                    { name: 'Water', emoji: '💧', desc: 'A basic liquid used in almost all food preparation.', correct: true },
+                    { name: 'Honey', emoji: '🍯', desc: 'A natural sweetener produced by bees.', correct: false },
+                    { name: 'Lemon Juice', emoji: '🍋', desc: 'A citrus fruit juice used for flavor and acidity.', correct: false }
                 ],
-                Smoothie: [
-                    { name: 'Bananas', emoji: '🍌', desc: 'For creaminess', correct: true },
-                    { name: 'Berries', emoji: '🍓', desc: 'For flavor', correct: true },
-                    { name: 'Yogurt', emoji: '🥛', desc: 'For texture', correct: true },
-                    { name: 'Chili Powder', emoji: '🌶️', desc: 'Spicy ingredient', correct: false },
-                    { name: 'Cinnamon', emoji: '🍪', desc: 'For flavor', correct: false },
-                    { name: 'Ice', emoji: '❄️', desc: 'For coolness', correct: false },
-                    { name: 'Coconut Milk', emoji: '🥥', desc: 'For creaminess', correct: false },
-                    { name: 'Avocado', emoji: '🥑', desc: 'For texture', correct: false },
-                    { name: 'Peanut Butter', emoji: '🥜', desc: 'For flavor', correct: false },
-                    { name: 'Oats', emoji: '🌾', desc: 'For texture', correct: false }
+                'Vegan Cheese': [
+                    { name: 'Cashews', emoji: '🥜', desc: 'A nut that is often blended into creamy products.', correct: true },
+                    { name: 'Almond Milk', emoji: '🥛', desc: 'A dairy-free milk made from almonds.', correct: true },
+                    { name: 'Nutritional Yeast', emoji: '🧀', desc: 'A yeast used for its cheesy flavor in plant-based products.', correct: true },
+                    { name: 'Tapioca Starch', emoji: '🍚', desc: 'A starch used to add texture and consistency in foods.', correct: true },
+                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat derived from coconuts, often used for its creamy texture.', correct: true },
+                    { name: 'Lemon Juice', emoji: '🍋', desc: 'Adds acidity and tanginess to various recipes.', correct: true },
+                    { name: 'Rice Flour', emoji: '🍚', desc: 'A flour made from rice, often used in gluten-free recipes.', correct: false },
+                    { name: 'Coconut Milk', emoji: '🥥', desc: 'A creamy liquid made from coconut meat.', correct: false },
+                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet ingredient, not usually needed in vegan cheese.', correct: false },
+                    { name: 'Pepper', emoji: '🌶️', desc: 'A spice used for heat in food, but not typically in cheese.', correct: false }
+                ],
+                'Kombucha': [
+                    { name: 'Black Tea', emoji: '🍂', desc: 'A common tea used as the base for fermented beverages.', correct: true },
+                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet ingredient that feeds fermentation cultures.', correct: true },
+                    { name: 'Ginger', emoji: '🌶️', desc: 'A root used for its spicy flavor in beverages.', correct: true },
+                    { name: 'Lemon', emoji: '🍋', desc: 'A citrus fruit used for its refreshing flavor.', correct: true },
+                    { name: 'Green Tea', emoji: '🍃', desc: 'A variety of tea used in some fermented drinks.', correct: true },
+                    { name: 'SCOBY', emoji: '🦠', desc: 'A microorganism used in fermentation processes.', correct: true },
+                    { name: 'Honey', emoji: '🍯', desc: 'A natural sweetener, though not used in kombucha fermentation.', correct: false },
+                    { name: 'Cinnamon', emoji: '🍪', desc: 'A spice used for flavor, but not common in kombucha.', correct: false },
+                    { name: 'Artificial Sweetener', emoji: '🍬', desc: 'A non-sugar sweetener, not recommended for fermentation.', correct: false },
+                    { name: 'Grapefruit', emoji: '🍊', desc: 'A citrus fruit, but not typically used in kombucha.', correct: false }
+                ],
+                'Lab-Grown Meat': [
+                    { name: 'Animal Cells', emoji: '🐄', desc: 'Cells used for cultivating meat in labs.', correct: true },
+                    { name: 'Growth Medium', emoji: '🧫', desc: 'A nutrient solution used to help cells grow.', correct: true },
+                    { name: 'Fetal Bovine Serum', emoji: '🩸', desc: 'A common growth medium for cultivating animal cells.', correct: true },
+                    { name: 'Pea Protein', emoji: '🌱', desc: 'A plant-based protein used in alternative meats.', correct: false },
+                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat source, but not related to lab-grown meat.', correct: false },
+                    { name: 'Carrot Extract', emoji: '🥕', desc: 'A natural ingredient used for color or flavor.', correct: false },
+                    { name: 'Seaweed', emoji: '🌊', desc: 'Used in some products for texture, but not in lab-grown meat.', correct: false },
+                    { name: 'Soy Lecithin', emoji: '🌱', desc: 'A common emulsifier in various food products.', correct: true },
+                    { name: 'Rice Flour', emoji: '🍚', desc: 'A starch used as a binder in many recipes.', correct: false },
+                    { name: 'Hemp Oil', emoji: '🌿', desc: 'An oil used for fat content, not related to lab-grown meat.', correct: false }
                 ]
             },
             processes: [
-                { name: 'Frying', emoji: '🔥', desc: 'Deep-fry the ingredients', correct: true },
-                { name: 'Baking', emoji: '🍞', desc: 'Bake the dough', correct: true },
-                { name: 'Mixing', emoji: '🥄', desc: 'Combine ingredients', correct: true },
-                { name: 'Boiling', emoji: '🍳', desc: 'Cook in hot water', correct: false },
-                { name: 'Grilling', emoji: '🍽️', desc: 'Cook with heat', correct: false },
-                { name: 'Steaming', emoji: '💨', desc: 'Cook with steam', correct: false },
-                { name: 'Blending', emoji: '🍹', desc: 'For smoothies', correct: false },
-                { name: 'Roasting', emoji: '🌰', desc: 'Cook in oven at high heat', correct: false },
-                { name: 'Stir-frying', emoji: '🍳', desc: 'Cook with oil in a pan', correct: false },
-                { name: 'Sous-vide', emoji: '🥩', desc: 'Cook in vacuum-sealed bag in water', correct: false }
+                'Nutrient Encapsulation', 'Fermentation', 'Cold Pressing', 'Flavoring', 'Binding', 
+                'Extrusion Cooking', 'Molding', 'Blending', 'Shaping', 'Slicing'
             ],
             machinery: [
-                { name: 'Fryer', emoji: '🔥', desc: 'For frying the chips', correct: true },
-                { name: 'Slicer', emoji: '🔪', desc: 'For cutting ingredients', correct: true },
-                { name: 'Mixer', emoji: '🌀', desc: 'For mixing ingredients', correct: true },
-                { name: 'Blender', emoji: '🍹', desc: 'For smoothies', correct: false },
-                { name: 'Boiler', emoji: '🍳', desc: 'For boiling ingredients', correct: false },
-                { name: 'Grill', emoji: '🍖', desc: 'For grilling ingredients', correct: false },
-                { name: 'Toaster', emoji: '🍞', desc: 'For toasting bread', correct: false },
-                { name: 'Microwave', emoji: '📡', desc: 'For quick heating', correct: false },
-                { name: 'Juicer', emoji: '🍊', desc: 'For making juice', correct: false },
-                { name: 'Refrigerator', emoji: '🧊', desc: 'For storing ingredients', correct: false }
+                'Extruder', 'Bioreactor', 'Molding Press', 'Blender', 'Fermentation Vessel', 
+                'Freeze Dryer', 'Packaging Machine', 'Cell Harvester', 'Slicer', 'Grill Machine'
             ]
         };
 
         let selectedDifficulty = null;
         let selectedProduct = null;
         let score = 0;
+        let totalQuestions = 0; // Track the total questions for each difficulty
         let currentStep = 'product'; // Track the current step (product, ingredient, process, machinery)
         let wrongChoices = [];
 
@@ -284,7 +334,6 @@
         // Select Product and highlight
         function selectProduct(productName, index) {
             selectedProduct = gameData.products.find(product => product.name === productName);
-            // Highlight the selected product
             const selectedCard = document.getElementById(`product-${index}`);
             const allCards = document.querySelectorAll('.option-card');
             allCards.forEach(card => card.classList.remove('selected'));  // Remove selection from all cards
@@ -294,6 +343,7 @@
         // Show ingredient selection after product selection
         function showIngredientSelection() {
             shuffleArray(gameData.ingredients[selectedProduct.name]); // Shuffle ingredients
+            totalQuestions = gameData.ingredients[selectedProduct.name].length;  // Set the total questions for this step
             const section = document.createElement('div');
             section.classList.add('section');
             section.innerHTML = `
@@ -308,6 +358,7 @@
                     `).join('')}
                 </div>
                 <button class="action-btn" onclick="nextStep()">Next</button>
+                <button class="back-btn" onclick="previousStep()">Back</button>
             `;
             document.getElementById('gameContent').innerHTML = section.outerHTML;
         }
@@ -316,7 +367,9 @@
         function toggleSelection(card, isCorrect, itemName) {
             card.classList.toggle('selected');
             card.setAttribute("data-correct", isCorrect);
-            if (!isCorrect) {
+            if (isCorrect) {
+                score += 1;
+            } else {
                 wrongChoices.push(itemName); // Record incorrect choices
             }
         }
@@ -324,60 +377,64 @@
         // Show process selection for Intermediate or Expert
         function showProcessSelection() {
             shuffleArray(gameData.processes); // Shuffle processes
+            totalQuestions += gameData.processes.length; // Add process questions to total
             const section = document.createElement('div');
             section.classList.add('section');
             section.innerHTML = `
                 <h2>Select Processes for ${selectedProduct.name}</h2>
                 <div class="options-grid">
                     ${gameData.processes.map((process, index) => `
-                        <div class="option-card" id="process-${index}" onclick="toggleProcessSelection(this, ${process.correct}, '${process.name}')">
-                            <span class="option-emoji">${process.emoji}</span>
-                            <div class="option-title">${process.name}</div>
-                            <div class="option-desc">${process.desc}</div>
+                        <div class="option-card" id="process-${index}" onclick="toggleProcessSelection(this, true, '${process}')">
+                            <div class="option-title">${process}</div>
                         </div>
                     `).join('')}
                 </div>
                 <button class="action-btn" onclick="nextStep()">Next</button>
+                <button class="back-btn" onclick="previousStep()">Back</button>
             `;
             document.getElementById('gameContent').innerHTML = section.outerHTML;
         }
 
         // Toggle selection for processes
-        function toggleProcessSelection(card, isCorrect, processName) {
+        function toggleProcessSelection(card, isCorrect, process) {
             card.classList.toggle('selected');
             card.setAttribute("data-correct", isCorrect);
-            if (!isCorrect) {
-                wrongChoices.push(processName); // Record incorrect choices
+            if (isCorrect) {
+                score += 1;
+            } else {
+                wrongChoices.push(process); // Record incorrect choices
             }
         }
 
         // Show machinery selection for Expert
         function showMachinerySelection() {
             shuffleArray(gameData.machinery); // Shuffle machinery
+            totalQuestions += gameData.machinery.length; // Add machinery questions to total
             const section = document.createElement('div');
             section.classList.add('section');
             section.innerHTML = `
                 <h2>Select Machinery for ${selectedProduct.name}</h2>
                 <div class="options-grid">
                     ${gameData.machinery.map((machinery, index) => `
-                        <div class="option-card" id="machinery-${index}" onclick="toggleMachinerySelection(this, ${machinery.correct}, '${machinery.name}')">
-                            <span class="option-emoji">${machinery.emoji}</span>
-                            <div class="option-title">${machinery.name}</div>
-                            <div class="option-desc">${machinery.desc}</div>
+                        <div class="option-card" id="machinery-${index}" onclick="toggleMachinerySelection(this, true, '${machinery}')">
+                            <div class="option-title">${machinery}</div>
                         </div>
                     `).join('')}
                 </div>
                 <button class="action-btn" onclick="nextStep()">Next</button>
+                <button class="back-btn" onclick="previousStep()">Back</button>
             `;
             document.getElementById('gameContent').innerHTML = section.outerHTML;
         }
 
         // Toggle selection for machinery
-        function toggleMachinerySelection(card, isCorrect, machineryName) {
+        function toggleMachinerySelection(card, isCorrect, machinery) {
             card.classList.toggle('selected');
             card.setAttribute("data-correct", isCorrect);
-            if (!isCorrect) {
-                wrongChoices.push(machineryName); // Record incorrect choices
+            if (isCorrect) {
+                score += 1;
+            } else {
+                wrongChoices.push(machinery); // Record incorrect choices
             }
         }
 
@@ -386,8 +443,8 @@
             document.getElementById('gameContent').style.display = 'none';
             document.getElementById('scoreTab').style.display = 'block';
 
-            // Display the score and incorrect choices
-            let feedbackHTML = `<p>Your score: ${score}</p>`;
+            let percentage = (score / totalQuestions) * 100;
+            let feedbackHTML = `<p>Your score: ${percentage.toFixed(2)}/100</p>`;
             if (wrongChoices.length > 0) {
                 feedbackHTML += `<p>Incorrect selections: ${wrongChoices.join(', ')}</p>`;
             } else {
@@ -420,6 +477,20 @@
             } else if (currentStep === 'machinery') {
                 showScoreTab();
                 currentStep = 'score';
+            }
+        }
+
+        // Handle "Back" to previous step
+        function previousStep() {
+            if (currentStep === 'ingredient') {
+                showProductSelection();
+                currentStep = 'product';
+            } else if (currentStep === 'process') {
+                showIngredientSelection();
+                currentStep = 'ingredient';
+            } else if (currentStep === 'machinery') {
+                showProcessSelection();
+                currentStep = 'process';
             }
         }
 
