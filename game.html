@@ -1,0 +1,459 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build-A-Bite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 40px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .input-section, .main-content {
+            text-align: center;
+        }
+
+        .input-section input {
+            padding: 10px;
+            margin: 10px;
+            width: 80%;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .difficulty-selection button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .difficulty-selection button:hover {
+            background-color: #5a6268;
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-card {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .option-card:hover {
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+
+        .selected {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .action-btn {
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+
+        .score-summary {
+            background: #ffc107;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            text-align: center; /* Align score content in center */
+        }
+
+        .score-summary p {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .feedback {
+            background-color: #ffeb3b;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        #scoreTab {
+            display: none;
+            background-color: #ffffff;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #scoreTab h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #scoreSummary {
+            font-size: 18px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Input Section -->
+        <div class="input-section" id="inputSection">
+            <h1>🍽️ Build-A-Bite</h1>
+            <p>Craft Delicious Foods from Scratch to Success</p>
+            <input type="text" id="name" placeholder="Enter your Name" />
+            <input type="email" id="email" placeholder="Enter your Email" />
+            
+            <div class="difficulty-selection">
+                <button onclick="selectDifficulty('beginner')">Beginner</button>
+                <button onclick="selectDifficulty('intermediate')">Intermediate</button>
+                <button onclick="selectDifficulty('expert')">Expert</button>
+            </div>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="main-content" id="gameContent" style="display: none;">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+
+        <!-- Score Tab -->
+        <div id="scoreTab">
+            <h2>Your Score</h2>
+            <div id="scoreSummary"></div>
+            <button class="action-btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            products: [
+                { name: 'Chips', emoji: '🍟', desc: 'Crispy and delicious' },
+                { name: 'Cookies', emoji: '🍪', desc: 'Sweet and chewy' },
+                { name: 'Smoothie', emoji: '🥤', desc: 'Healthy and refreshing' },
+            ],
+            ingredients: {
+                Chips: [
+                    { name: 'Potatoes', emoji: '🥔', desc: 'Base for chips', correct: true },
+                    { name: 'Salt', emoji: '🧂', desc: 'Flavor enhancer', correct: true },
+                    { name: 'Vegetable Oil', emoji: '🧴', desc: 'For frying', correct: true },
+                    { name: 'Rice Flour', emoji: '🍚', desc: 'Gluten-free flour', correct: false },
+                    { name: 'Butter', emoji: '🧈', desc: 'For frying', correct: false },
+                    { name: 'Garlic', emoji: '🧄', desc: 'Flavor enhancer', correct: false },
+                    { name: 'Lemon', emoji: '🍋', desc: 'Acidity', correct: false },
+                    { name: 'Chili Powder', emoji: '🌶️', desc: 'Spicy flavor', correct: false },
+                    { name: 'Onion', emoji: '🧅', desc: 'For flavor', correct: false },
+                    { name: 'Cheese', emoji: '🧀', desc: 'For flavor', correct: false }
+                ],
+                Cookies: [
+                    { name: 'Flour', emoji: '🍚', desc: 'Main ingredient for dough', correct: true },
+                    { name: 'Sugar', emoji: '🍬', desc: 'For sweetness', correct: true },
+                    { name: 'Butter', emoji: '🧈', desc: 'For texture', correct: true },
+                    { name: 'Vegetable Oil', emoji: '🧴', desc: 'Uncommon for cookies', correct: false },
+                    { name: 'Eggs', emoji: '🥚', desc: 'For binding', correct: false },
+                    { name: 'Honey', emoji: '🍯', desc: 'For sweetness', correct: false },
+                    { name: 'Baking Soda', emoji: '🧪', desc: 'Leavening agent', correct: false },
+                    { name: 'Milk', emoji: '🥛', desc: 'For dough consistency', correct: false },
+                    { name: 'Vanilla', emoji: '🍦', desc: 'For flavor', correct: false },
+                    { name: 'Cocoa Powder', emoji: '🍫', desc: 'For flavor', correct: false }
+                ],
+                Smoothie: [
+                    { name: 'Bananas', emoji: '🍌', desc: 'For creaminess', correct: true },
+                    { name: 'Berries', emoji: '🍓', desc: 'For flavor', correct: true },
+                    { name: 'Yogurt', emoji: '🥛', desc: 'For texture', correct: true },
+                    { name: 'Chili Powder', emoji: '🌶️', desc: 'Spicy ingredient', correct: false },
+                    { name: 'Cinnamon', emoji: '🍪', desc: 'For flavor', correct: false },
+                    { name: 'Ice', emoji: '❄️', desc: 'For coolness', correct: false },
+                    { name: 'Coconut Milk', emoji: '🥥', desc: 'For creaminess', correct: false },
+                    { name: 'Avocado', emoji: '🥑', desc: 'For texture', correct: false },
+                    { name: 'Peanut Butter', emoji: '🥜', desc: 'For flavor', correct: false },
+                    { name: 'Oats', emoji: '🌾', desc: 'For texture', correct: false }
+                ]
+            },
+            processes: [
+                { name: 'Frying', emoji: '🔥', desc: 'Deep-fry the ingredients', correct: true },
+                { name: 'Baking', emoji: '🍞', desc: 'Bake the dough', correct: true },
+                { name: 'Mixing', emoji: '🥄', desc: 'Combine ingredients', correct: true },
+                { name: 'Boiling', emoji: '🍳', desc: 'Cook in hot water', correct: false },
+                { name: 'Grilling', emoji: '🍽️', desc: 'Cook with heat', correct: false },
+                { name: 'Steaming', emoji: '💨', desc: 'Cook with steam', correct: false },
+                { name: 'Blending', emoji: '🍹', desc: 'For smoothies', correct: false },
+                { name: 'Roasting', emoji: '🌰', desc: 'Cook in oven at high heat', correct: false },
+                { name: 'Stir-frying', emoji: '🍳', desc: 'Cook with oil in a pan', correct: false },
+                { name: 'Sous-vide', emoji: '🥩', desc: 'Cook in vacuum-sealed bag in water', correct: false }
+            ],
+            machinery: [
+                { name: 'Fryer', emoji: '🔥', desc: 'For frying the chips', correct: true },
+                { name: 'Slicer', emoji: '🔪', desc: 'For cutting ingredients', correct: true },
+                { name: 'Mixer', emoji: '🌀', desc: 'For mixing ingredients', correct: true },
+                { name: 'Blender', emoji: '🍹', desc: 'For smoothies', correct: false },
+                { name: 'Boiler', emoji: '🍳', desc: 'For boiling ingredients', correct: false },
+                { name: 'Grill', emoji: '🍖', desc: 'For grilling ingredients', correct: false },
+                { name: 'Toaster', emoji: '🍞', desc: 'For toasting bread', correct: false },
+                { name: 'Microwave', emoji: '📡', desc: 'For quick heating', correct: false },
+                { name: 'Juicer', emoji: '🍊', desc: 'For making juice', correct: false },
+                { name: 'Refrigerator', emoji: '🧊', desc: 'For storing ingredients', correct: false }
+            ]
+        };
+
+        let selectedDifficulty = null;
+        let selectedProduct = null;
+        let score = 0;
+        let currentStep = 'product'; // Track the current step (product, ingredient, process, machinery)
+        let wrongChoices = [];
+
+        // Shuffle function to randomize options
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]]; // Swap elements
+            }
+        }
+
+        // Show product selection
+        function showProductSelection() {
+            const section = document.createElement('div');
+            section.classList.add('section');
+            section.innerHTML = `
+                <h2>Select a Product</h2>
+                <div class="options-grid">
+                    ${gameData.products.map((product, index) => `
+                        <div class="option-card" id="product-${index}" onclick="selectProduct('${product.name}', ${index})">
+                            <span class="option-emoji">${product.emoji}</span>
+                            <div class="option-title">${product.name}</div>
+                            <div class="option-desc">${product.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="action-btn" onclick="nextStep()">Next</button>
+            `;
+            document.getElementById('gameContent').innerHTML = section.outerHTML;
+        }
+
+        // Select Product and highlight
+        function selectProduct(productName, index) {
+            selectedProduct = gameData.products.find(product => product.name === productName);
+            // Highlight the selected product
+            const selectedCard = document.getElementById(`product-${index}`);
+            const allCards = document.querySelectorAll('.option-card');
+            allCards.forEach(card => card.classList.remove('selected'));  // Remove selection from all cards
+            selectedCard.classList.add('selected');  // Highlight the selected product
+        }
+
+        // Show ingredient selection after product selection
+        function showIngredientSelection() {
+            shuffleArray(gameData.ingredients[selectedProduct.name]); // Shuffle ingredients
+            const section = document.createElement('div');
+            section.classList.add('section');
+            section.innerHTML = `
+                <h2>Select Ingredients for ${selectedProduct.name}</h2>
+                <div class="options-grid">
+                    ${gameData.ingredients[selectedProduct.name].map((item, index) => `
+                        <div class="option-card" id="ingredient-${index}" onclick="toggleSelection(this, ${item.correct}, '${item.name}')">
+                            <span class="option-emoji">${item.emoji}</span>
+                            <div class="option-title">${item.name}</div>
+                            <div class="option-desc">${item.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="action-btn" onclick="nextStep()">Next</button>
+            `;
+            document.getElementById('gameContent').innerHTML = section.outerHTML;
+        }
+
+        // Toggle selection of ingredients
+        function toggleSelection(card, isCorrect, itemName) {
+            card.classList.toggle('selected');
+            card.setAttribute("data-correct", isCorrect);
+            if (!isCorrect) {
+                wrongChoices.push(itemName); // Record incorrect choices
+            }
+        }
+
+        // Show process selection for Intermediate or Expert
+        function showProcessSelection() {
+            shuffleArray(gameData.processes); // Shuffle processes
+            const section = document.createElement('div');
+            section.classList.add('section');
+            section.innerHTML = `
+                <h2>Select Processes for ${selectedProduct.name}</h2>
+                <div class="options-grid">
+                    ${gameData.processes.map((process, index) => `
+                        <div class="option-card" id="process-${index}" onclick="toggleProcessSelection(this, ${process.correct}, '${process.name}')">
+                            <span class="option-emoji">${process.emoji}</span>
+                            <div class="option-title">${process.name}</div>
+                            <div class="option-desc">${process.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="action-btn" onclick="nextStep()">Next</button>
+            `;
+            document.getElementById('gameContent').innerHTML = section.outerHTML;
+        }
+
+        // Toggle selection for processes
+        function toggleProcessSelection(card, isCorrect, processName) {
+            card.classList.toggle('selected');
+            card.setAttribute("data-correct", isCorrect);
+            if (!isCorrect) {
+                wrongChoices.push(processName); // Record incorrect choices
+            }
+        }
+
+        // Show machinery selection for Expert
+        function showMachinerySelection() {
+            shuffleArray(gameData.machinery); // Shuffle machinery
+            const section = document.createElement('div');
+            section.classList.add('section');
+            section.innerHTML = `
+                <h2>Select Machinery for ${selectedProduct.name}</h2>
+                <div class="options-grid">
+                    ${gameData.machinery.map((machinery, index) => `
+                        <div class="option-card" id="machinery-${index}" onclick="toggleMachinerySelection(this, ${machinery.correct}, '${machinery.name}')">
+                            <span class="option-emoji">${machinery.emoji}</span>
+                            <div class="option-title">${machinery.name}</div>
+                            <div class="option-desc">${machinery.desc}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="action-btn" onclick="nextStep()">Next</button>
+            `;
+            document.getElementById('gameContent').innerHTML = section.outerHTML;
+        }
+
+        // Toggle selection for machinery
+        function toggleMachinerySelection(card, isCorrect, machineryName) {
+            card.classList.toggle('selected');
+            card.setAttribute("data-correct", isCorrect);
+            if (!isCorrect) {
+                wrongChoices.push(machineryName); // Record incorrect choices
+            }
+        }
+
+        // Show score tab and feedback
+        function showScoreTab() {
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('scoreTab').style.display = 'block';
+
+            // Display the score and incorrect choices
+            let feedbackHTML = `<p>Your score: ${score}</p>`;
+            if (wrongChoices.length > 0) {
+                feedbackHTML += `<p>Incorrect selections: ${wrongChoices.join(', ')}</p>`;
+            } else {
+                feedbackHTML += `<p>Great job! No wrong choices!</p>`;
+            }
+            document.getElementById('scoreSummary').innerHTML = feedbackHTML;
+        }
+
+        // Handle "Next" step based on the game state
+        function nextStep() {
+            if (currentStep === 'product') {
+                showIngredientSelection();
+                currentStep = 'ingredient';
+            } else if (currentStep === 'ingredient') {
+                if (selectedDifficulty === 'intermediate' || selectedDifficulty === 'expert') {
+                    showProcessSelection();
+                    currentStep = 'process';
+                } else {
+                    showScoreTab();
+                    currentStep = 'score';
+                }
+            } else if (currentStep === 'process') {
+                if (selectedDifficulty === 'expert') {
+                    showMachinerySelection();
+                    currentStep = 'machinery';
+                } else {
+                    showScoreTab();
+                    currentStep = 'score';
+                }
+            } else if (currentStep === 'machinery') {
+                showScoreTab();
+                currentStep = 'score';
+            }
+        }
+
+        // Start the game
+        function selectDifficulty(level) {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            if (!name || !email) {
+                alert('Please provide your Name and Email.');
+                return;
+            }
+
+            document.getElementById('inputSection').style.display = 'none';
+            document.getElementById('gameContent').style.display = 'block';
+
+            selectedDifficulty = level;
+            currentStep = 'product'; // Start from product selection
+
+            alert(`Welcome, ${name}! You've selected ${level} mode.`);
+            showProductSelection();
+        }
+
+        // Restart the game
+        function restartGame() {
+            document.getElementById('scoreTab').style.display = 'none';
+            document.getElementById('inputSection').style.display = 'block';
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            wrongChoices = [];
+            score = 0;
+            currentStep = 'product';
+        }
+    </script>
+
+</body>
+</html>
