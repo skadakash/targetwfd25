@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Build-A-Bite</title>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7gRL_Q5Pw-lMMfHlOE56DkQLu9G2IZiM",
+    authDomain: "targetwfd25.firebaseapp.com",
+    databaseURL: "https://targetwfd25-default-rtdb.firebaseio.com",
+    projectId: "targetwfd25",
+    storageBucket: "targetwfd25.firebasestorage.app",
+    messagingSenderId: "746419935926",
+    appId: "1:746419935926:web:b24f496bdda7e18bc9a417",
+    measurementId: "G-RDGHKKYERD"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 <style>
   * { box-sizing: border-box; }
 body {
@@ -148,7 +172,7 @@ body {
 </head>
 <body>
 <div style="position: relative; width: 100%; display: flex; justify-content: center;">
-  <div class="game-container" ontouchstart="">
+  <div class="game-container">
   <div id="timerBox">Time Left: <span id="timeCount">0</span>s</div>
 
 
@@ -175,6 +199,19 @@ body {
 <audio id="clickSound" src="click-sound.mp3" preload="auto"></audio>
 <script>
 let timeTaken = 0;
+let voices = [];
+
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+
+}
+
+// Load voices on page load
+window.speechSynthesis.onvoiceschanged = loadVoices;
+window.onload = () => {
+  loadVoices();
+};
+
 let tickPlayedAt = null; // add this at the top near other global variables
 const gameData = {
   products: [
@@ -207,7 +244,7 @@ let score = 0, total = 0, timer = 0, countdown;
 let currentStep = 'product', selectedProduct = null, selectedDifficulty = null, wrongChoices = [];
 const clickSound = document.getElementById("clickSound");
 document.addEventListener("click", () => clickSound.play());
-document.addEventListener("touchstart", () => clickSound.play());
+document.addEventListener("touchstart", () => clickSound.play(), { passive: true });
 
 function selectDifficulty(level) {
   const name = document.getElementById('name').value;
@@ -223,10 +260,35 @@ function selectDifficulty(level) {
 function startBotInstruction(text, joke = false) {
   const bot = document.getElementById('instructionBot');
   bot.innerText = text;
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = joke ? 1.1 : 0.9;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utterance);
+  utterance.volume = 1;
+
+  function assignVoiceAndSpeak() {
+    const voices = speechSynthesis.getVoices();
+    
+    // Try to pick a female-like voice from available list
+    const preferredVoices = voices.filter(v =>
+      /zira|female|woman|susan|samantha|zira/i.test(v.name)
+    );
+
+    // Fallback to any available voice
+    utterance.voice = preferredVoices[0] || voices[0];
+
+    if (!utterance.voice) {
+      console.warn("No voice available.");
+    }
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.onvoiceschanged = assignVoiceAndSpeak;
+  } else {
+    assignVoiceAndSpeak();
+  }
 }
 
 function startTimer(seconds) {
@@ -360,32 +422,59 @@ document.getElementById('timerBox').classList.remove('visible', 'blinking', 'red
   document.getElementById('scoreSummary').innerHTML = `Score: ${percent.toFixed(2)}%<br>${wrongChoices.length ? 'Wrong: ' + wrongChoices.join(', ') : 'Perfect!'}`;
   updateLeaderboard();
 startBotInstruction('Here is your score. Check how you did and view the top players!');
+const email = document.getElementById('email').value;
+const name = document.getElementById('name').value;
+const percent = (score / total) * 100;
+
+db.collection("participants").add({
+  name: name,
+  email: email,
+  difficulty: selectedDifficulty,
+  score: percent.toFixed(2),
+  time: timeTaken,
+  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+})
+.then(() => {
+  console.log("Participant data saved.");
+})
+.catch((error) => {
+  console.error("Error saving data: ", error);
+});
+
 }
 
 function updateLeaderboard() {
   const name = document.getElementById('name').value;
   const percent = (score / total) * 100;
-  const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+  const difficultyKey = `leaderboard_${selectedDifficulty}`;
+  const leaderboard = JSON.parse(localStorage.getItem(difficultyKey)) || [];
 
   leaderboard.push({ name, score: percent.toFixed(2), time: timeTaken });
   leaderboard.sort((a, b) => b.score - a.score);
   const top5 = leaderboard.slice(0, 5);
-  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+  localStorage.setItem(difficultyKey, JSON.stringify(leaderboard));
 
-  document.getElementById('leaderboardContent').innerHTML = '<h3>Top 5 Players</h3>' +
+  document.getElementById('leaderboardContent').innerHTML =
+    `<h3>Top 5 Players (${capitalize(selectedDifficulty)})</h3>` +
     top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
-    `<button onclick="exportLeaderboardCSV()">Download Leaderboard</button>`;
+    `<button onclick="exportLeaderboardCSV('${selectedDifficulty}')">Download Leaderboard</button>`;
 }
 
-function exportLeaderboardCSV() {
-  const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+function exportLeaderboardCSV(difficulty) {
+  const difficultyKey = `leaderboard_${difficulty}`;
+  const leaderboard = JSON.parse(localStorage.getItem(difficultyKey)) || [];
   const csv = 'Name,Score (%),Time (s)\n' +
               leaderboard.map(e => `${e.name},${e.score},${e.time}`).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'leaderboard.csv';
+  link.download = `leaderboard_${difficulty}.csv`;
   link.click();
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 
