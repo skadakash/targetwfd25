@@ -354,6 +354,7 @@ function previousStep() {
 
 function showScoreTab() {
   document.getElementById('gameContent').style.display = 'none';
+document.getElementById('timerBox').classList.remove('visible', 'blinking', 'red-pulse');
   document.getElementById('scoreTab').style.display = 'block';
   const percent = (score / total) * 100;
   document.getElementById('scoreSummary').innerHTML = `Score: ${percent.toFixed(2)}%<br>${wrongChoices.length ? 'Wrong: ' + wrongChoices.join(', ') : 'Perfect!'}`;
