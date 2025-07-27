@@ -1,198 +1,468 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Build-A-Bite Game</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-    #gameContainer {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    #leaderboardTabs {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    #leaderboardTabs button {
-      padding: 8px 16px;
-      border: none;
-      background-color: #333;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #leaderboardTabs button:hover {
-      background-color: #555;
-    }
-    #timer {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build-A-Bite</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  background: #f4f4f4;
+  color: #333;
+  touch-action: manipulation;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.game-container {
+  position: relative; /* added */
+  background-color: #fff;
+  padding: 30px;
+  width: 50%;
+  min-width: 400px;
+  max-width: 700px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+
+  .input-section input, button {
+    font-size: 14px;
+    padding: 10px;
+    margin: 10px 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  .option-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #f9f9f9;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .option-card.selected {
+    background: #c8e6c9;
+    border-color: #4CAF50;
+  }
+#timerBox {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background-color: #ffecb3;
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(-10px);
+  z-index: 5;
+}
+#timerBox.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+#timerBox.blinking {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes redPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    background-color: #ffcdd2;
+  }
+  70% {
+    box-shadow: 0 0 10px 10px rgba(255, 0, 0, 0);
+    background-color: #ffcdd2;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    background-color: #ffebee;
+  }
+}
+
+#timerBox.red-pulse {
+ animation: redPulse 1s infinite;
+}
+
+  #botWrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 320px;
+  }
+  #botImage {
+    height: 140px;
+  }
+  #instructionBot {
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    font-size: 14px;
+  }
+  #instructionBot.speaking {
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); background-color: #fff; }
+    50% { transform: scale(1.05); background-color: #e0ffe0; }
+    100% { transform: scale(1); background-color: #fff; }
+  }
+</style>
+
 </head>
 <body>
-  <div id="gameContainer">
-    <h1>Build-A-Bite</h1>
-    <div>
-      <button onclick="selectDifficulty('beginner')">Beginner</button>
-      <button onclick="selectDifficulty('intermediate')">Intermediate</button>
-      <button onclick="selectDifficulty('expert')">Expert</button>
-    </div>
+<div style="position: relative; width: 100%; display: flex; justify-content: center;">
+  <div class="game-container">
+  <div id="timerBox">Time Left: <span id="timeCount">0</span>s</div>
 
-    <div id="instruction"></div>
-    <div id="timer"></div>
-    <div id="game"></div>
-    <div id="scoreTab">
-      <div id="leaderboardTabs">
-        <button onclick="showLeaderboardTab('beginner')">Beginner</button>
-        <button onclick="showLeaderboardTab('intermediate')">Intermediate</button>
-        <button onclick="showLeaderboardTab('expert')">Expert</button>
-      </div>
-      <div id="leaderboardContent"></div>
-    </div>
+
+  <div class="input-section" id="inputSection">
+    <h1>🍽️ Build-A-Bite</h1>
+    <p>Craft Delicious Foods from Scratch to Success</p>
+    <input type="text" id="name" placeholder="Enter your Name">
+    <input type="email" id="email" placeholder="Enter your Email">
+    <button onclick="selectDifficulty('beginner')">Beginner</button>
+    <button onclick="selectDifficulty('intermediate')">Intermediate</button>
+    <button onclick="selectDifficulty('expert')">Expert</button>
   </div>
+<div id="gameContent" style="display:none">
+  <div id="gameSteps"></div>
+</div>
 
-  <script>
-    let selectedDifficulty = "beginner";
-    let steps = [];
-    let currentStep = 0;
-    let correctCount = 0;
-    let wrongCount = 0;
-    let timeLeft = 60;
-    let timer;
-    let playerName = prompt("Enter your name:");
-    const clickSound = new Audio("https://www.soundjay.com/button/beep-07.wav");
+  <div id="scoreTab" style="display:none">
+    <h2>Score Summary</h2>
+    <div id="scoreSummary"></div>
+    <div id="leaderboardContent"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+<audio id="clickSound" src="click-sound.mp3" preload="auto"></audio>
+<script>
+let timeTaken = 0;
+let voices = [];
 
-    const instruction = document.getElementById("instruction");
-    const timerDisplay = document.getElementById("timer");
-    const game = document.getElementById("game");
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
 
-    const allIngredients = ["Lettuce", "Tomato", "Cheese", "Patty", "Bun", "Pickle"];
+}
 
-    function selectDifficulty(difficulty) {
-      selectedDifficulty = difficulty;
-      resetGame();
-      startBotInstruction();
-      startGame();
+// Load voices on page load
+window.speechSynthesis.onvoiceschanged = loadVoices;
+window.onload = () => {
+  loadVoices();
+};
+
+let tickPlayedAt = null; // add this at the top near other global variables
+const gameData = {
+  products: [
+    { name: 'Plant-Based Meat', emoji: '🍔', desc: 'Meat alternative from plants.' },
+    { name: '3D-Printed Food', emoji: '🖨️', desc: 'Printed edible creations.' },
+    { name: 'Vegan Cheese', emoji: '🧀', desc: 'Cheese without dairy.' }
+  ],
+  ingredients: {
+    'Plant-Based Meat': [
+      { name: 'Soy Protein', emoji: '🌱', correct: true },
+      { name: 'Carrot Extract', emoji: '🥕', correct: true },
+      { name: 'Flour', emoji: '🍞', correct: false }
+    ],
+    '3D-Printed Food': [
+      { name: 'Chocolate', emoji: '🍫', correct: true },
+      { name: 'Sugar', emoji: '🍬', correct: true },
+      { name: 'Salt', emoji: '🧂', correct: false }
+    ],
+    'Vegan Cheese': [
+      { name: 'Cashews', emoji: '🥜', correct: true },
+      { name: 'Almond Milk', emoji: '🥛', correct: true },
+      { name: 'Pepper', emoji: '🌶️', correct: false }
+    ]
+  },
+  processes: ["Blending", "Fermentation", "Shaping"],
+  machinery: ["Extruder", "Bioreactor", "Molding Press"]
+};
+
+let score = 0, total = 0, timer = 0, countdown;
+let currentStep = 'product', selectedProduct = null, selectedDifficulty = null, wrongChoices = [];
+const clickSound = document.getElementById("clickSound");
+document.addEventListener("click", () => clickSound.play());
+document.addEventListener("touchstart", () => clickSound.play(), { passive: true });
+
+function selectDifficulty(level) {
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  if (!name || !email) return alert('Please fill in all fields');
+  selectedDifficulty = level;
+  document.getElementById('inputSection').style.display = 'none';
+  document.getElementById('gameContent').style.display = 'block';
+  startBotInstruction("Let's begin! Choose a food to build.");
+  showProductSelection();
+}
+
+function startBotInstruction(text, joke = false) {
+  const bot = document.getElementById('instructionBot');
+  bot.innerText = text;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = joke ? 1.1 : 0.9;
+  utterance.volume = 1;
+
+  function assignVoiceAndSpeak() {
+    const voices = speechSynthesis.getVoices();
+    
+    // Try to pick a female-like voice from available list
+    const preferredVoices = voices.filter(v =>
+      /zira|female|woman|susan|samantha|zira/i.test(v.name)
+    );
+
+    // Fallback to any available voice
+    utterance.voice = preferredVoices[0] || voices[0];
+
+    if (!utterance.voice) {
+      console.warn("No voice available.");
     }
 
-    function resetGame() {
-      steps = [];
-      currentStep = 0;
-      correctCount = 0;
-      wrongCount = 0;
-      timeLeft = 60;
-      clearInterval(timer);
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.onvoiceschanged = assignVoiceAndSpeak;
+  } else {
+    assignVoiceAndSpeak();
+  }
+}
+
+function startTimer(seconds) {
+  const timerDisplay = document.getElementById("timeCount");
+  const timerBox = document.getElementById("timerBox");
+  const tickSound = document.getElementById("tickSound");
+
+  clearInterval(countdown);
+  tickPlayedAt = null;  // Reset previously played second
+tickSound.pause();
+tickSound.currentTime = 0;
+
+  timeTaken = 0;
+
+
+  // Show timer instantly
+  timerDisplay.textContent = seconds;
+  timerBox.classList.add('visible');
+  timerBox.classList.remove('blinking', 'red-pulse');
+
+  countdown = setInterval(() => {
+    seconds--;
+    timerDisplay.textContent = seconds;
+    timeTaken++;
+
+    if (seconds === 15) startBotInstruction("15 seconds left! Hurry, or your food might burn!", true);
+    if (seconds === 10) {
+      startBotInstruction("10 seconds left!", true);
     }
 
-    function startBotInstruction() {
-      const msg = new SpeechSynthesisUtterance(
-        `Hello ${playerName}, get ready for the ${selectedDifficulty} level.`
-      );
-      speechSynthesis.speak(msg);
-    }
+if (seconds <= 5 && seconds > 0) {
+  timerBox.classList.add('blinking', 'red-pulse');
 
-    function startGame() {
-      instruction.textContent = "";
-      generateSteps();
-      renderStep();
-      timer = setInterval(() => {
-        timeLeft--;
-        timerDisplay.textContent = `Time left: ${timeLeft}s`;
-        if (timeLeft <= 0) {
-          clearInterval(timer);
-          endGame();
-        }
-      }, 1000);
-    }
+  if (tickPlayedAt !== seconds) {
+    tickPlayedAt = seconds;
 
-    function generateSteps() {
-      const count = selectedDifficulty === "beginner" ? 3 : selectedDifficulty === "intermediate" ? 5 : 6;
-      for (let i = 0; i < count; i++) {
-        const item = allIngredients[Math.floor(Math.random() * allIngredients.length)];
-        steps.push(item);
-      }
+    if (tickSound.paused) {
+      tickSound.currentTime = 0;
+      tickSound.play().catch(() => {}); // silent fail if not allowed
     }
+  }
+}
 
-    function renderStep() {
-      instruction.textContent = `Choose: ${steps[currentStep]}`;
-      game.innerHTML = allIngredients
-        .map(
-          (item) => `<button onclick="handleChoice('${item}')">${item}</button>`
-        )
-        .join(" ");
-    }
+if (seconds <= 0) {
+  clearInterval(countdown);
+  tickSound.pause();
+  tickSound.currentTime = 0;
+  timerBox.classList.remove('blinking');
+  showScoreTab();
+}
 
-    function handleChoice(choice) {
-      clickSound.play();
-      if (choice === steps[currentStep]) {
-        correctCount++;
-      } else {
-        wrongCount++;
-      }
-      currentStep++;
-      if (currentStep < steps.length) {
-        renderStep();
-      } else {
-        endGame();
-      }
-    }
+  }, 1000);
+}
 
-    function endGame() {
-      clearInterval(timer);
-      const percent = Math.round((correctCount / steps.length) * 100);
-      instruction.textContent = `Game Over! ${playerName}, your score: ${percent}%`;
-      updateLeaderboard(percent);
-    }
 
-    function updateLeaderboard(score) {
-      const difficultyKey = `leaderboard_${selectedDifficulty}`;
-      const leaderboard = JSON.parse(localStorage.getItem(difficultyKey)) || [];
-      leaderboard.push({ name: playerName, score, time: 60 - timeLeft });
-      leaderboard.sort((a, b) => b.score - a.score);
-      localStorage.setItem(difficultyKey, JSON.stringify(leaderboard));
-      showLeaderboardTab(selectedDifficulty);
-    }
 
-    function showLeaderboardTab(difficulty) {
-      const leaderboard = JSON.parse(localStorage.getItem(`leaderboard_${difficulty}`)) || [];
-      leaderboard.sort((a, b) => b.score - a.score);
-      const top5 = leaderboard.slice(0, 5);
-      document.getElementById("leaderboardContent").innerHTML =
-        `<h3>Top 5 Players (${capitalize(difficulty)})</h3>` +
-        top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
-        `<button onclick="exportLeaderboardCSV('${difficulty}')">Download Leaderboard</button>`;
-    }
 
-    function exportLeaderboardCSV(difficulty) {
-      const leaderboard = JSON.parse(localStorage.getItem(`leaderboard_${difficulty}`)) || [];
-      const csv = 'Name,Score,Time\n' + leaderboard.map(e => `${e.name},${e.score},${e.time}`).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${difficulty}_leaderboard.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+function showProductSelection() {
+  document.getElementById('timerBox').style.display = 'none';
+  currentStep = 'product';
+  document.getElementById('gameSteps').innerHTML = `<h2>Select a Product</h2><div class="options-grid">
+    ${gameData.products.map(p => `<div class="option-card" onclick="selectProduct('${p.name}')">${p.emoji}<br>${p.name}</div>`).join('')}
+  </div><button onclick="nextStep()">Next</button>`;
+  startBotInstruction('Choose a futuristic food product to craft!');
+}
 
-    function capitalize(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-  </script>
+function selectProduct(name) {
+  selectedProduct = name;
+  document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+  [...document.querySelectorAll('.option-card')].find(c => c.innerText.includes(name)).classList.add('selected');
+}
+
+function showSelectionStep(type, items) {
+  total += items.length;
+document.getElementById('gameSteps').innerHTML = `<h2>Select ${type} for ${selectedProduct}</h2><div class="options-grid">
+  ${items.map(i => `<div class="option-card" onclick="toggleSelection(this, ${i.correct}, '${i.name}')">${i.emoji || ''}<br>${i.name}</div>`).join('')}
+</div><button onclick="nextStep()">Next</button><button onclick="previousStep()">Back</button>`;
+startBotInstruction(`Select the correct ${type.toLowerCase()} to make your product.`);
+}
+
+function toggleSelection(card, isCorrect, name) {
+  card.classList.toggle('selected');
+  if (isCorrect) score++;
+  else wrongChoices.push(name);
+}
+
+function nextStep() {
+  if (currentStep === 'product') {
+  // Start timer now
+  let seconds = 30;
+  if (selectedDifficulty === 'intermediate') seconds = 30;
+  if (selectedDifficulty === 'expert') seconds = 30;
+  const timerBox = document.getElementById('timerBox');
+timerBox.style.display = 'block';
+setTimeout(() => timerBox.classList.add('visible'), 10);
+
+  startTimer(seconds);
+
+  currentStep = 'ingredient';
+  showSelectionStep('Ingredients', gameData.ingredients[selectedProduct]);
+} else if (currentStep === 'ingredient' && ['intermediate','expert'].includes(selectedDifficulty)) {
+    currentStep = 'process';
+    showSelectionStep('Processes', gameData.processes.map(p => ({ name: p, correct: true })));
+  } else if (currentStep === 'process' && selectedDifficulty === 'expert') {
+    currentStep = 'machinery';
+    showSelectionStep('Machinery', gameData.machinery.map(m => ({ name: m, correct: true })));
+  } else {
+    clearInterval(countdown);
+    showScoreTab();
+  }
+}
+
+function previousStep() {
+  if (currentStep === 'ingredient') {
+    showProductSelection();
+    currentStep = 'product';
+  } else if (currentStep === 'process') {
+    showSelectionStep('Ingredients', gameData.ingredients[selectedProduct]);
+    currentStep = 'ingredient';
+  } else if (currentStep === 'machinery') {
+    showSelectionStep('Processes', gameData.processes.map(p => ({ name: p, correct: true })));
+    currentStep = 'process';
+  }
+}
+
+function showScoreTab() {
+  document.getElementById('gameContent').style.display = 'none';
+document.getElementById('timerBox').classList.remove('visible', 'blinking', 'red-pulse');
+  document.getElementById('scoreTab').style.display = 'block';
+  const percent = (score / total) * 100;
+  document.getElementById('scoreSummary').innerHTML = `Score: ${percent.toFixed(2)}%<br>${wrongChoices.length ? 'Wrong: ' + wrongChoices.join(', ') : 'Perfect!'}`;
+  updateLeaderboard();
+startBotInstruction('Here is your score. Check how you did and view the top players!');
+}
+
+function updateLeaderboard() {
+  const name = document.getElementById('name').value;
+  const percent = (score / total) * 100;
+
+  const difficultyKey = `leaderboard_${selectedDifficulty}`;
+  const leaderboard = JSON.parse(localStorage.getItem(difficultyKey)) || [];
+
+  leaderboard.push({ name, score: percent.toFixed(2), time: timeTaken });
+  leaderboard.sort((a, b) => b.score - a.score);
+  const top5 = leaderboard.slice(0, 5);
+  localStorage.setItem(difficultyKey, JSON.stringify(leaderboard));
+
+  document.getElementById('leaderboardContent').innerHTML =
+    `<h3>Top 5 Players (${capitalize(selectedDifficulty)})</h3>` +
+    top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
+    `<button onclick="exportLeaderboardCSV('${selectedDifficulty}')">Download Leaderboard</button>`;
+}
+
+function exportLeaderboardCSV(difficulty) {
+  const difficultyKey = `leaderboard_${difficulty}`;
+  const leaderboard = JSON.parse(localStorage.getItem(difficultyKey)) || [];
+  const csv = 'Name,Score (%),Time (s)\n' +
+              leaderboard.map(e => `${e.name},${e.score},${e.time}`).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `leaderboard_${difficulty}.csv`;
+  link.click();
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+
+function restartGame() {
+  score = 0;
+  total = 0;
+  timer = 0;
+  selectedProduct = null;
+  selectedDifficulty = null;
+  wrongChoices = [];
+
+  // Stop and reset timer
+  clearInterval(countdown);
+  document.getElementById('timerBox').style.display = 'none';
+  document.getElementById('timeCount').textContent = '0';
+
+  // Reset UI
+  document.getElementById('scoreTab').style.display = 'none';
+  document.getElementById('inputSection').style.display = 'block';
+  document.getElementById('gameContent').style.display = 'none';
+  document.getElementById('gameSteps').innerHTML = '';
+}
+</script>
+
+<div id="botWrapper">
+  <img id="botImage" src="bot-animation.jpg" alt="Animated Bot">
+  <div id="instructionBot">Welcome to Build-A-Bite!</div>
+</div>
+
+<audio id="tickSound" src="tick.mp3" preload="auto"></audio>
+
 </body>
 </html>
