@@ -167,6 +167,25 @@ body {
     50% { transform: scale(1.05); background-color: #e0ffe0; }
     100% { transform: scale(1); background-color: #fff; }
   }
+  #leaderboardTabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+#leaderboardTabs button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #333;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#leaderboardTabs button:hover {
+  background-color: #555;
+}
+
 </style>
 
 </head>
@@ -192,7 +211,13 @@ body {
   <div id="scoreTab" style="display:none">
     <h2>Score Summary</h2>
     <div id="scoreSummary"></div>
-    <div id="leaderboardContent"></div>
+    <div id="leaderboardTabs">
+  <button onclick="showLeaderboardTab('beginner')">Beginner</button>
+  <button onclick="showLeaderboardTab('intermediate')">Intermediate</button>
+  <button onclick="showLeaderboardTab('expert')">Expert</button>
+</div>
+<div id="leaderboardContent"></div>
+
     <button onclick="restartGame()">Play Again</button>
   </div>
 </div>
@@ -459,6 +484,18 @@ function updateLeaderboard() {
     `<h3>Top 5 Players (${capitalize(selectedDifficulty)})</h3>` +
     top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
     `<button onclick="exportLeaderboardCSV('${selectedDifficulty}')">Download Leaderboard</button>`;
+  showLeaderboardTab(selectedDifficulty);
+
+}
+function showLeaderboardTab(difficulty) {
+  const leaderboard = JSON.parse(localStorage.getItem(`leaderboard_${difficulty}`)) || [];
+  leaderboard.sort((a, b) => b.score - a.score);
+  const top5 = leaderboard.slice(0, 5);
+
+  document.getElementById('leaderboardContent').innerHTML =
+    `<h3>Top 5 Players (${capitalize(difficulty)})</h3>` +
+    top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
+    `<button onclick="exportLeaderboardCSV('${difficulty}')">Download Leaderboard</button>`;
 }
 
 function exportLeaderboardCSV(difficulty) {
