@@ -1,715 +1,420 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Build-A-Bite</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build-A-Bite</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  background: #f4f4f4;
+  color: #333;
+  touch-action: manipulation;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f8f9fa;  /* Changed to light background */
-            margin: 0;
-            padding: 0;
-        }
+.game-container {
+  position: relative; /* added */
+  background-color: #fff;
+  padding: 30px;
+  width: 50%;
+  min-width: 400px;
+  max-width: 700px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
 
-        .game-container {
-            width: 100%;
-            max-width: 1000px; /* Made the container full width */
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            min-height: 80vh; /* Allowing the container to take up more space */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
 
-        .input-section, .main-content {
-            text-align: center;
-        }
+  .input-section input, button {
+    font-size: 14px;
+    padding: 10px;
+    margin: 10px 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin-top: 20px;
+  }
+  .option-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #f9f9f9;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .option-card.selected {
+    background: #c8e6c9;
+    border-color: #4CAF50;
+  }
+#timerBox {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background-color: #ffecb3;
+  color: #333;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateY(-10px);
+  z-index: 5;
+}
+#timerBox.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
 
-        .input-section input {
-            padding: 10px;
-            margin: 10px;
-            width: 80%;
-            max-width: 400px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
+#timerBox.blinking {
+  animation: blink 1s steps(2, start) infinite;
+}
 
-        .difficulty-selection button {
-            padding: 10px 20px;
-            margin: 10px;
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes redPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    background-color: #ffcdd2;
+  }
+  70% {
+    box-shadow: 0 0 10px 10px rgba(255, 0, 0, 0);
+    background-color: #ffcdd2;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    background-color: #ffebee;
+  }
+}
 
-        .difficulty-selection button:hover {
-            background-color: #5a6268;
-        }
+#timerBox.red-pulse {
+ animation: redPulse 1s infinite;
+}
 
-        .section {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
+  #botWrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 320px;
+  }
+  #botImage {
+    height: 140px;
+  }
+  #instructionBot {
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    font-size: 14px;
+  }
+  #instructionBot.speaking {
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); background-color: #fff; }
+    50% { transform: scale(1.05); background-color: #e0ffe0; }
+    100% { transform: scale(1); background-color: #fff; }
+  }
+</style>
 
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .option-card {
-            background: #f8f9fa;
-            padding: 15px;
-            text-align: center;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .option-card:hover {
-            border-color: #007bff;
-            transform: scale(1.05);
-        }
-
-        .selected {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .action-btn {
-            background: #28a745;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            margin-top: 10px;
-        }
-
-        .score-summary {
-            background: #ffc107;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .score-summary p {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .feedback {
-            background-color: #ffeb3b;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-        }
-
-        #scoreTab {
-            display: none;
-            background-color: #ffffff;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        #scoreTab h2 {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        #scoreSummary {
-            font-size: 18px;
-            text-align: center;
-        }
-
-        .back-btn {
-            background: #dc3545;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin-top: 15px;
-            cursor: pointer;
-            border: none;
-        }
-
-        .back-btn:hover {
-            background-color: #c82333;
-        }
-    </style>
 </head>
 <body>
-    <div class="game-container">
-        <!-- Input Section -->
-        <div class="input-section" id="inputSection">
-            <h1>🍽️ Build-A-Bite</h1>
-            <p>Craft Delicious Foods from Scratch to Success</p>
-            <input type="text" id="name" placeholder="Enter your Name" />
-            <input type="email" id="email" placeholder="Enter your Email" />
-            
-            <div class="difficulty-selection">
-                <button onclick="selectDifficulty('beginner')">Beginner</button>
-                <button onclick="selectDifficulty('intermediate')">Intermediate</button>
-                <button onclick="selectDifficulty('expert')">Expert</button>
-            </div>
-        </div>
-
-        <!-- Main Content Section -->
-        <div class="main-content" id="gameContent" style="display: none;">
-            <!-- Dynamic content will be inserted here -->
-        </div>
-
-        <!-- Score Tab -->
-        <div id="scoreTab">
-            <h2>Your Score</h2>
-            <div id="scoreSummary"></div>
-            <button class="action-btn" onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
-
-    <script>
-        const gameData = {
-            products: [
-                { 
-                    name: 'Plant-Based Meat', 
-                    emoji: '🍔', 
-                    desc: 'A plant-based meat that mimics the taste and texture of traditional meat.' 
-                },
-                { 
-                    name: '3D-Printed Food', 
-                    emoji: '🖨️', 
-                    desc: 'Food created by 3D printing technology for custom shapes and designs.' 
-                },
-                { 
-                    name: 'Vegan Cheese', 
-                    emoji: '🧀', 
-                    desc: 'Dairy-free cheese made from plant-based ingredients.' 
-                },
-                { 
-                    name: 'Kombucha', 
-                    emoji: '🍹', 
-                    desc: 'A fermented tea beverage with probiotics.' 
-                },
-                { 
-                    name: 'Lab-Grown Meat', 
-                    emoji: '🥩', 
-                    desc: 'Meat grown in a lab without the need for animal slaughter.' 
-                }
-            ],
-            ingredients: {
-                'Plant-Based Meat': [
-                    { name: 'Soy Protein', emoji: '🌱', desc: 'A protein-rich ingredient, often used in plant-based foods.', correct: true },
-                    { name: 'Pea Protein', emoji: '🍃', desc: 'A plant-based protein often used in vegan products.', correct: true },
-                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A plant-derived fat used for texture and moisture.', correct: true },
-                    { name: 'Rice Flour', emoji: '🍚', desc: 'A flour used as a binder or thickener in some food products.', correct: false },
-                    { name: 'Chickpea Flour', emoji: '🌾', desc: 'A flour made from chickpeas, commonly used for binding.', correct: false },
-                    { name: 'Lemon Extract', emoji: '🍋', desc: 'Adds a tangy flavor to various food items.', correct: false },
-                    { name: 'Carrot Extract', emoji: '🥕', desc: 'A natural ingredient often used for color and flavor.', correct: true },
-                    { name: 'Vegan Cheese', emoji: '🧀', desc: 'A dairy-free cheese made from various plant-based ingredients.', correct: false },
-                    { name: 'Seaweed', emoji: '🌊', desc: 'A marine plant often used for texture in some dishes.', correct: false },
-                    { name: 'Hemp Oil', emoji: '🌿', desc: 'An oil derived from hemp seeds, used for fat content in food.', correct: false }
-                ],
-                '3D-Printed Food': [
-                    { name: 'Chocolate', emoji: '🍫', desc: 'A sweet ingredient used for various food designs.', correct: true },
-                    { name: 'Algae Powder', emoji: '🌿', desc: 'A nutrient-rich ingredient, often used for sustainable nutrition.', correct: true },
-                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet substance often used in food for flavor.', correct: true },
-                    { name: 'Flour', emoji: '🍚', desc: 'A common ingredient used in baking and food binding.', correct: true },
-                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat used in various food products for texture and flavor.', correct: false },
-                    { name: 'Butter', emoji: '🧈', desc: 'A fatty substance used in cooking and baking.', correct: false },
-                    { name: 'Natural Sweeteners', emoji: '🍯', desc: 'Sweeteners derived from natural sources, such as plants.', correct: true },
-                    { name: 'Water', emoji: '💧', desc: 'A basic liquid used in almost all food preparation.', correct: true },
-                    { name: 'Honey', emoji: '🍯', desc: 'A natural sweetener produced by bees.', correct: false },
-                    { name: 'Lemon Juice', emoji: '🍋', desc: 'A citrus fruit juice used for flavor and acidity.', correct: false }
-                ],
-                'Vegan Cheese': [
-                    { name: 'Cashews', emoji: '🥜', desc: 'A nut that is often blended into creamy products.', correct: true },
-                    { name: 'Almond Milk', emoji: '🥛', desc: 'A dairy-free milk made from almonds.', correct: true },
-                    { name: 'Nutritional Yeast', emoji: '🧀', desc: 'A yeast used for its cheesy flavor in plant-based products.', correct: true },
-                    { name: 'Tapioca Starch', emoji: '🍚', desc: 'A starch used to add texture and consistency in foods.', correct: true },
-                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat derived from coconuts, often used for its creamy texture.', correct: true },
-                    { name: 'Lemon Juice', emoji: '🍋', desc: 'Adds acidity and tanginess to various recipes.', correct: true },
-                    { name: 'Rice Flour', emoji: '🍚', desc: 'A flour made from rice, often used in gluten-free recipes.', correct: false },
-                    { name: 'Coconut Milk', emoji: '🥥', desc: 'A creamy liquid made from coconut meat.', correct: false },
-                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet ingredient, not usually needed in vegan cheese.', correct: false },
-                    { name: 'Pepper', emoji: '🌶️', desc: 'A spice used for heat in food, but not typically in cheese.', correct: false }
-                ],
-                'Kombucha': [
-                    { name: 'Black Tea', emoji: '🍂', desc: 'A common tea used as the base for fermented beverages.', correct: true },
-                    { name: 'Sugar', emoji: '🍬', desc: 'A sweet ingredient that feeds fermentation cultures.', correct: true },
-                    { name: 'Ginger', emoji: '🌶️', desc: 'A root used for its spicy flavor in beverages.', correct: true },
-                    { name: 'Lemon', emoji: '🍋', desc: 'A citrus fruit used for its refreshing flavor.', correct: true },
-                    { name: 'Green Tea', emoji: '🍃', desc: 'A variety of tea used in some fermented drinks.', correct: true },
-                    { name: 'SCOBY', emoji: '🦠', desc: 'A microorganism used in fermentation processes.', correct: true },
-                    { name: 'Honey', emoji: '🍯', desc: 'A natural sweetener, though not used in kombucha fermentation.', correct: false },
-                    { name: 'Cinnamon', emoji: '🍪', desc: 'A spice used for flavor, but not common in kombucha.', correct: false },
-                    { name: 'Artificial Sweetener', emoji: '🍬', desc: 'A non-sugar sweetener, not recommended for fermentation.', correct: false },
-                    { name: 'Grapefruit', emoji: '🍊', desc: 'A citrus fruit, but not typically used in kombucha.', correct: false }
-                ],
-                'Lab-Grown Meat': [
-                    { name: 'Animal Cells', emoji: '🐄', desc: 'Cells used for cultivating meat in labs.', correct: true },
-                    { name: 'Growth Medium', emoji: '🧫', desc: 'A nutrient solution used to help cells grow.', correct: true },
-                    { name: 'Fetal Bovine Serum', emoji: '🩸', desc: 'A common growth medium for cultivating animal cells.', correct: true },
-                    { name: 'Pea Protein', emoji: '🌱', desc: 'A plant-based protein used in alternative meats.', correct: false },
-                    { name: 'Coconut Oil', emoji: '🥥', desc: 'A fat source, but not related to lab-grown meat.', correct: false },
-                    { name: 'Carrot Extract', emoji: '🥕', desc: 'A natural ingredient used for color or flavor.', correct: false },
-                    { name: 'Seaweed', emoji: '🌊', desc: 'Used in some products for texture, but not in lab-grown meat.', correct: false },
-                    { name: 'Soy Lecithin', emoji: '🌱', desc: 'A common emulsifier in various food products.', correct: true },
-                    { name: 'Rice Flour', emoji: '🍚', desc: 'A starch used as a binder in many recipes.', correct: false },
-                    { name: 'Hemp Oil', emoji: '🌿', desc: 'An oil used for fat content, not related to lab-grown meat.', correct: false }
-                ]
-            },
-            processes: [
-                'Nutrient Encapsulation', 'Fermentation', 'Cold Pressing', 'Flavoring', 'Binding', 
-                'Extrusion Cooking', 'Molding', 'Blending', 'Shaping', 'Slicing'
-            ],
-            machinery: [
-                'Extruder', 'Bioreactor', 'Molding Press', 'Blender', 'Fermentation Vessel', 
-                'Freeze Dryer', 'Packaging Machine', 'Cell Harvester', 'Slicer', 'Grill Machine'
-            ]
-        };
-
-        let selectedDifficulty = null;
-        let selectedProduct = null;
-        let score = 0;
-        let totalQuestions = 0; // Track the total questions for each difficulty
-        let currentStep = 'product'; // Track the current step (product, ingredient, process, machinery)
-        let wrongChoices = [];
-
-        // Shuffle function to randomize options
-        function shuffleArray(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]]; // Swap elements
-            }
-        }
-
-        // Show product selection
-        function showProductSelection() {
-            const section = document.createElement('div');
-            section.classList.add('section');
-            section.innerHTML = `
-                <h2>Select a Product</h2>
-                <div class="options-grid">
-                    ${gameData.products.map((product, index) => `
-                        <div class="option-card" id="product-${index}" onclick="selectProduct('${product.name}', ${index})">
-                            <span class="option-emoji">${product.emoji}</span>
-                            <div class="option-title">${product.name}</div>
-                            <div class="option-desc">${product.desc}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="action-btn" onclick="nextStep()">Next</button>
-            `;
-            document.getElementById('gameContent').innerHTML = section.outerHTML;
-        }
-
-        // Select Product and highlight
-        function selectProduct(productName, index) {
-		    const clickSound = document.getElementById("clickSound"); // Get the sound element
-		    clickSound.play();  // Play the sound when a product is selected
-		    selectedProduct = gameData.products.find(product => product.name === productName);
-		    const selectedCard = document.getElementById(`product-${index}`);
-		    const allCards = document.querySelectorAll('.option-card');
-		    allCards.forEach(card => card.classList.remove('selected'));
-		    selectedCard.classList.add('selected');        
-		}
-
-        // Show ingredient selection after product selection
-        function showIngredientSelection() {
-            shuffleArray(gameData.ingredients[selectedProduct.name]); // Shuffle ingredients
-            totalQuestions = gameData.ingredients[selectedProduct.name].length;  // Set the total questions for this step
-            const section = document.createElement('div');
-            section.classList.add('section');
-            section.innerHTML = `
-                <h2>Select Ingredients for ${selectedProduct.name}</h2>
-                <div class="options-grid">
-                    ${gameData.ingredients[selectedProduct.name].map((item, index) => `
-                        <div class="option-card" id="ingredient-${index}" onclick="toggleSelection(this, ${item.correct}, '${item.name}')">
-                            <span class="option-emoji">${item.emoji}</span>
-                            <div class="option-title">${item.name}</div>
-                            <div class="option-desc">${item.desc}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="action-btn" onclick="nextStep()">Next</button>
-                <button class="back-btn" onclick="previousStep()">Back</button>
-            `;
-            document.getElementById('gameContent').innerHTML = section.outerHTML;
-        }
-
-        // Toggle selection of ingredients
-        function toggleSelection(card, isCorrect, itemName) {
-    		const clickSound = document.getElementById("clickSound"); // Get the sound element
-		    clickSound.play();  // Play the sound when an ingredient is selected
-		    card.classList.toggle('selected');
-		    card.setAttribute("data-correct", isCorrect);
-		    if (isCorrect) {
-		        score += 1;
-		    } else {
-		        wrongChoices.push(itemName);
-		    }
-		}
+<div style="position: relative; width: 100%; display: flex; justify-content: center;">
+  <div class="game-container" ontouchstart="">
+  <div id="timerBox">Time Left: <span id="timeCount">0</span>s</div>
 
 
-        // Show process selection for Intermediate or Expert
-        function showProcessSelection() {
-            shuffleArray(gameData.processes); // Shuffle processes
-            totalQuestions += gameData.processes.length; // Add process questions to total
-            const section = document.createElement('div');
-            section.classList.add('section');
-            section.innerHTML = `
-                <h2>Select Processes for ${selectedProduct.name}</h2>
-                <div class="options-grid">
-                    ${gameData.processes.map((process, index) => `
-                        <div class="option-card" id="process-${index}" onclick="toggleProcessSelection(this, true, '${process}')">
-                            <div class="option-title">${process}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="action-btn" onclick="nextStep()">Next</button>
-                <button class="back-btn" onclick="previousStep()">Back</button>
-            `;
-            document.getElementById('gameContent').innerHTML = section.outerHTML;
-        }
+  <div class="input-section" id="inputSection">
+    <h1>🍽️ Build-A-Bite</h1>
+    <p>Craft Delicious Foods from Scratch to Success</p>
+    <input type="text" id="name" placeholder="Enter your Name">
+    <input type="email" id="email" placeholder="Enter your Email">
+    <button onclick="selectDifficulty('beginner')">Beginner</button>
+    <button onclick="selectDifficulty('intermediate')">Intermediate</button>
+    <button onclick="selectDifficulty('expert')">Expert</button>
+  </div>
+<div id="gameContent" style="display:none">
+  <div id="gameSteps"></div>
+</div>
 
-        // Toggle selection for processes
-        function toggleProcessSelection(card, isCorrect, process) {
-            card.classList.toggle('selected');
-            card.setAttribute("data-correct", isCorrect);
-            if (isCorrect) {
-                score += 1;
-            } else {
-                wrongChoices.push(process); // Record incorrect choices
-            }
-        }
+  <div id="scoreTab" style="display:none">
+    <h2>Score Summary</h2>
+    <div id="scoreSummary"></div>
+    <div id="leaderboardContent"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+<audio id="clickSound" src="click-sound.mp3" preload="auto"></audio>
+<script>
+let timeTaken = 0;
+let tickPlayedAt = null; // add this at the top near other global variables
+const gameData = {
+  products: [
+    { name: 'Plant-Based Meat', emoji: '🍔', desc: 'Meat alternative from plants.' },
+    { name: '3D-Printed Food', emoji: '🖨️', desc: 'Printed edible creations.' },
+    { name: 'Vegan Cheese', emoji: '🧀', desc: 'Cheese without dairy.' }
+  ],
+  ingredients: {
+    'Plant-Based Meat': [
+      { name: 'Soy Protein', emoji: '🌱', correct: true },
+      { name: 'Carrot Extract', emoji: '🥕', correct: true },
+      { name: 'Flour', emoji: '🍞', correct: false }
+    ],
+    '3D-Printed Food': [
+      { name: 'Chocolate', emoji: '🍫', correct: true },
+      { name: 'Sugar', emoji: '🍬', correct: true },
+      { name: 'Salt', emoji: '🧂', correct: false }
+    ],
+    'Vegan Cheese': [
+      { name: 'Cashews', emoji: '🥜', correct: true },
+      { name: 'Almond Milk', emoji: '🥛', correct: true },
+      { name: 'Pepper', emoji: '🌶️', correct: false }
+    ]
+  },
+  processes: ["Blending", "Fermentation", "Shaping"],
+  machinery: ["Extruder", "Bioreactor", "Molding Press"]
+};
 
-        // Show machinery selection for Expert
-        function showMachinerySelection() {
-            shuffleArray(gameData.machinery); // Shuffle machinery
-            totalQuestions += gameData.machinery.length; // Add machinery questions to total
-            const section = document.createElement('div');
-            section.classList.add('section');
-            section.innerHTML = `
-                <h2>Select Machinery for ${selectedProduct.name}</h2>
-                <div class="options-grid">
-                    ${gameData.machinery.map((machinery, index) => `
-                        <div class="option-card" id="machinery-${index}" onclick="toggleMachinerySelection(this, true, '${machinery}')">
-                            <div class="option-title">${machinery}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="action-btn" onclick="nextStep()">Next</button>
-                <button class="back-btn" onclick="previousStep()">Back</button>
-            `;
-            document.getElementById('gameContent').innerHTML = section.outerHTML;
-        }
+let score = 0, total = 0, timer = 0, countdown;
+let currentStep = 'product', selectedProduct = null, selectedDifficulty = null, wrongChoices = [];
+const clickSound = document.getElementById("clickSound");
+document.addEventListener("click", () => clickSound.play());
+document.addEventListener("touchstart", () => clickSound.play());
 
-        // Toggle selection for machinery
-        function toggleMachinerySelection(card, isCorrect, machinery) {
-            card.classList.toggle('selected');
-            card.setAttribute("data-correct", isCorrect);
-            if (isCorrect) {
-                score += 1;
-            } else {
-                wrongChoices.push(machinery); // Record incorrect choices
-            }
-        }
-
-        // Show score tab and feedback
-        function showScoreTab() {
-            document.getElementById('gameContent').style.display = 'none';
-            document.getElementById('scoreTab').style.display = 'block';
-
-            let percentage = (score / totalQuestions) * 100;
-            let feedbackHTML = `<p>Your score: ${percentage.toFixed(2)}/100</p>`;
-            if (wrongChoices.length > 0) {
-                feedbackHTML += `<p>Incorrect selections: ${wrongChoices.join(', ')}</p>`;
-            } else {
-                feedbackHTML += `<p>Great job! No wrong choices!</p>`;
-            }
-            document.getElementById('scoreSummary').innerHTML = feedbackHTML;
-        }
-
-        // Handle "Next" step based on the game state
-        function nextStep() {
-            if (currentStep === 'product') {
-                showIngredientSelection();
-                currentStep = 'ingredient';
-            } else if (currentStep === 'ingredient') {
-                if (selectedDifficulty === 'intermediate' || selectedDifficulty === 'expert') {
-                    showProcessSelection();
-                    currentStep = 'process';
-                } else {
-                    showScoreTab();
-                    currentStep = 'score';
-                }
-            } else if (currentStep === 'process') {
-                if (selectedDifficulty === 'expert') {
-                    showMachinerySelection();
-                    currentStep = 'machinery';
-                } else {
-                    showScoreTab();
-                    currentStep = 'score';
-                }
-            } else if (currentStep === 'machinery') {
-                showScoreTab();
-                currentStep = 'score';
-            }
-        }
-
-        // Handle "Back" to previous step
-        function previousStep() {
-            if (currentStep === 'ingredient') {
-                showProductSelection();
-                currentStep = 'product';
-            } else if (currentStep === 'process') {
-                showIngredientSelection();
-                currentStep = 'ingredient';
-            } else if (currentStep === 'machinery') {
-                showProcessSelection();
-                currentStep = 'process';
-            }
-        }
-
-// Start the game based on the selected difficulty
 function selectDifficulty(level) {
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-
-    if (!name || !email) {
-        alert('Please provide your Name and Email.');
-        return;
-    }
-
-    // Hide the input section and show the game content
-    document.getElementById('inputSection').style.display = 'none';
-    document.getElementById('gameContent').style.display = 'block';
-
-    selectedDifficulty = level;
-    currentStep = 'product'; // Start from product selection
-
-    // Initialize Timer based on difficulty level
-    let timer = 30;  // Set timer for 30 seconds (can be adjusted based on difficulty)
-    if (selectedDifficulty === 'intermediate') {
-        timer = 45; // Intermediate gets 45 seconds
-    } else if (selectedDifficulty === 'expert') {
-        timer = 60; // Expert gets 60 seconds
-    }
-
-    let countdown; // Timer interval variable
-
-    // Create the timer element and add it to the game content
-    const timerDisplay = document.createElement('p');
-    timerDisplay.setAttribute('id', 'timer');
-    timerDisplay.style.fontSize = '24px'; // Ensure the text is large enough to see
-    timerDisplay.style.fontWeight = 'bold'; // Bold the timer text
-    timerDisplay.style.marginBottom = '20px'; // Add spacing below the timer
-    timerDisplay.style.textAlign = 'center'; // Center the timer text
-    document.getElementById('gameContent').prepend(timerDisplay); // Prepend it to gameContent
-
-    // Start the timer function
-    function startTimer() {
-        countdown = setInterval(function() {
-            timerDisplay.textContent = `Time Left: ${timer}s`;  // Update the text
-            if (timer <= 0) {
-                clearInterval(countdown);
-                showScoreTab(); // Move to score tab when time is up
-            }
-            timer--; // Decrease the timer each second
-        }, 1000);
-    }
-
-    // Start the timer when the game begins
-    startTimer();
-
-    // Show product selection
-    showProductSelection(); // This ensures the game moves to product selection
-
-    // Function to update the leaderboard
-    function updateLeaderboard() {
-        const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
-        leaderboard.push({ name: document.getElementById('name').value, score: score });
-        leaderboard.sort((a, b) => b.score - a.score); // Sort by score (descending order)
-        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-
-        // Display the leaderboard
-        const leaderboardContent = document.getElementById('leaderboardContent');
-        leaderboardContent.innerHTML = leaderboard.map(entry => `<p>${entry.name}: ${entry.score}</p>`).join('');
-    }
-
-    // Call the updateLeaderboard function when the game ends (inside showScoreTab)
-    updateLeaderboard();
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  if (!name || !email) return alert('Please fill in all fields');
+  selectedDifficulty = level;
+  document.getElementById('inputSection').style.display = 'none';
+  document.getElementById('gameContent').style.display = 'block';
+  startBotInstruction("Let's begin! Choose a food to build.");
+  showProductSelection();
 }
 
-// Show product selection function
+function startBotInstruction(text, joke = false) {
+  const bot = document.getElementById('instructionBot');
+  bot.innerText = text;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = joke ? 1.1 : 0.9;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
+
+function startTimer(seconds) {
+  const timerDisplay = document.getElementById("timeCount");
+  const timerBox = document.getElementById("timerBox");
+  const tickSound = document.getElementById("tickSound");
+
+  clearInterval(countdown);
+  tickPlayedAt = null;  // Reset previously played second
+tickSound.pause();
+tickSound.currentTime = 0;
+
+  timeTaken = 0;
+
+
+  // Show timer instantly
+  timerDisplay.textContent = seconds;
+  timerBox.classList.add('visible');
+  timerBox.classList.remove('blinking', 'red-pulse');
+
+  countdown = setInterval(() => {
+    seconds--;
+    timerDisplay.textContent = seconds;
+    timeTaken++;
+
+    if (seconds === 15) startBotInstruction("15 seconds left! Hurry, or your food might burn!", true);
+    if (seconds === 10) {
+      startBotInstruction("10 seconds left!", true);
+    }
+
+if (seconds <= 5 && seconds > 0) {
+  timerBox.classList.add('blinking', 'red-pulse');
+
+  if (tickPlayedAt !== seconds) {
+    tickPlayedAt = seconds;
+
+    if (tickSound.paused) {
+      tickSound.currentTime = 0;
+      tickSound.play().catch(() => {}); // silent fail if not allowed
+    }
+  }
+}
+
+if (seconds <= 0) {
+  clearInterval(countdown);
+  tickSound.pause();
+  tickSound.currentTime = 0;
+  timerBox.classList.remove('blinking');
+  showScoreTab();
+}
+
+  }, 1000);
+}
+
+
+
+
 function showProductSelection() {
-    const section = document.createElement('div');
-    section.classList.add('section');
-    section.innerHTML = `
-        <h2>Select a Product</h2>
-        <div class="options-grid">
-            ${gameData.products.map((product, index) => `
-                <div class="option-card" id="product-${index}" onclick="selectProduct('${product.name}', ${index})">
-                    <span class="option-emoji">${product.emoji}</span>
-                    <div class="option-title">${product.name}</div>
-                    <div class="option-desc">${product.desc}</div>
-                </div>
-            `).join('')}
-        </div>
-        <button class="action-btn" onclick="nextStep()">Next</button>
-    `;
-    document.getElementById('gameContent').innerHTML = section.outerHTML;
+  document.getElementById('timerBox').style.display = 'none';
+  currentStep = 'product';
+  document.getElementById('gameSteps').innerHTML = `<h2>Select a Product</h2><div class="options-grid">
+    ${gameData.products.map(p => `<div class="option-card" onclick="selectProduct('${p.name}')">${p.emoji}<br>${p.name}</div>`).join('')}
+  </div><button onclick="nextStep()">Next</button>`;
+  startBotInstruction('Choose a futuristic food product to craft!');
 }
 
-// Select Product and highlight
-function selectProduct(productName, index) {
-    selectedProduct = gameData.products.find(product => product.name === productName);
-    const selectedCard = document.getElementById(`product-${index}`);
-    const allCards = document.querySelectorAll('.option-card');
-    allCards.forEach(card => card.classList.remove('selected'));
-    selectedCard.classList.add('selected');        
+function selectProduct(name) {
+  selectedProduct = name;
+  document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+  [...document.querySelectorAll('.option-card')].find(c => c.innerText.includes(name)).classList.add('selected');
 }
 
-// Show ingredient selection after product selection
-function showIngredientSelection() {
-    shuffleArray(gameData.ingredients[selectedProduct.name]); // Shuffle ingredients
-    totalQuestions = gameData.ingredients[selectedProduct.name].length;  // Set the total questions for this step
-    const section = document.createElement('div');
-    section.classList.add('section');
-    section.innerHTML = `
-        <h2>Select Ingredients for ${selectedProduct.name}</h2>
-        <div class="options-grid">
-            ${gameData.ingredients[selectedProduct.name].map((item, index) => `
-                <div class="option-card" id="ingredient-${index}" onclick="toggleSelection(this, ${item.correct}, '${item.name}')">
-                    <span class="option-emoji">${item.emoji}</span>
-                    <div class="option-title">${item.name}</div>
-                    <div class="option-desc">${item.desc}</div>
-                </div>
-            `).join('')}
-        </div>
-        <button class="action-btn" onclick="nextStep()">Next</button>
-        <button class="back-btn" onclick="previousStep()">Back</button>
-    `;
-    document.getElementById('gameContent').innerHTML = section.outerHTML;
+function showSelectionStep(type, items) {
+  total += items.length;
+document.getElementById('gameSteps').innerHTML = `<h2>Select ${type} for ${selectedProduct}</h2><div class="options-grid">
+  ${items.map(i => `<div class="option-card" onclick="toggleSelection(this, ${i.correct}, '${i.name}')">${i.emoji || ''}<br>${i.name}</div>`).join('')}
+</div><button onclick="nextStep()">Next</button><button onclick="previousStep()">Back</button>`;
+startBotInstruction(`Select the correct ${type.toLowerCase()} to make your product.`);
 }
 
-// Toggle selection of ingredients
-function toggleSelection(card, isCorrect, itemName) {
-    card.classList.toggle('selected');
-    card.setAttribute("data-correct", isCorrect);
-    if (isCorrect) {
-        score += 1;
-    } else {
-        wrongChoices.push(itemName);
-    }
+function toggleSelection(card, isCorrect, name) {
+  card.classList.toggle('selected');
+  if (isCorrect) score++;
+  else wrongChoices.push(name);
 }
 
-// Handle "Next" step based on the game state
 function nextStep() {
-    if (currentStep === 'product') {
-        showIngredientSelection();
-        currentStep = 'ingredient';
-    } else if (currentStep === 'ingredient') {
-        if (selectedDifficulty === 'intermediate' || selectedDifficulty === 'expert') {
-            showProcessSelection();
-            currentStep = 'process';
-        } else {
-            showScoreTab();
-            currentStep = 'score';
-        }
-    } else if (currentStep === 'process') {
-        if (selectedDifficulty === 'expert') {
-            showMachinerySelection();
-            currentStep = 'machinery';
-        } else {
-            showScoreTab();
-            currentStep = 'score';
-        }
-    } else if (currentStep === 'machinery') {
-        showScoreTab();
-        currentStep = 'score';
-    }
+  if (currentStep === 'product') {
+  // Start timer now
+  let seconds = 30;
+  if (selectedDifficulty === 'intermediate') seconds = 30;
+  if (selectedDifficulty === 'expert') seconds = 30;
+  const timerBox = document.getElementById('timerBox');
+timerBox.style.display = 'block';
+setTimeout(() => timerBox.classList.add('visible'), 10);
+
+  startTimer(seconds);
+
+  currentStep = 'ingredient';
+  showSelectionStep('Ingredients', gameData.ingredients[selectedProduct]);
+} else if (currentStep === 'ingredient' && ['intermediate','expert'].includes(selectedDifficulty)) {
+    currentStep = 'process';
+    showSelectionStep('Processes', gameData.processes.map(p => ({ name: p, correct: true })));
+  } else if (currentStep === 'process' && selectedDifficulty === 'expert') {
+    currentStep = 'machinery';
+    showSelectionStep('Machinery', gameData.machinery.map(m => ({ name: m, correct: true })));
+  } else {
+    clearInterval(countdown);
+    showScoreTab();
+  }
 }
 
-// Handle "Back" to previous step
 function previousStep() {
-    if (currentStep === 'ingredient') {
-        showProductSelection();
-        currentStep = 'product';
-    } else if (currentStep === 'process') {
-        showIngredientSelection();
-        currentStep = 'ingredient';
-    } else if (currentStep === 'machinery') {
-        showProcessSelection();
-        currentStep = 'process';
-    }
-}
-
-// Show score tab and feedback
-function showScoreTab() {
-    document.getElementById('gameContent').style.display = 'none';
-    document.getElementById('scoreTab').style.display = 'block';
-
-    let percentage = (score / totalQuestions) * 100;
-    let feedbackHTML = `<p>Your score: ${percentage.toFixed(2)}/100</p>`;
-    if (wrongChoices.length > 0) {
-        feedbackHTML += `<p>Incorrect selections: ${wrongChoices.join(', ')}</p>`;
-    } else {
-        feedbackHTML += `<p>Great job! No wrong choices!</p>`;
-    }
-    document.getElementById('scoreSummary').innerHTML = feedbackHTML;
-}
-
-// Restart the game
-function restartGame() {
-    document.getElementById('scoreTab').style.display = 'none';
-    document.getElementById('inputSection').style.display = 'block';
-    document.getElementById('name').value = '';
-    document.getElementById('email').value = '';
-    wrongChoices = [];
-    score = 0;
+  if (currentStep === 'ingredient') {
+    showProductSelection();
     currentStep = 'product';
+  } else if (currentStep === 'process') {
+    showSelectionStep('Ingredients', gameData.ingredients[selectedProduct]);
+    currentStep = 'ingredient';
+  } else if (currentStep === 'machinery') {
+    showSelectionStep('Processes', gameData.processes.map(p => ({ name: p, correct: true })));
+    currentStep = 'process';
+  }
 }
 
-        // Restart the game
-        function restartGame() {
-            document.getElementById('scoreTab').style.display = 'none';
-            document.getElementById('inputSection').style.display = 'block';
-            document.getElementById('name').value = '';
-            document.getElementById('email').value = '';
-            wrongChoices = [];
-            score = 0;
-            currentStep = 'product';
-        }
-    </script>
+function showScoreTab() {
+  document.getElementById('gameContent').style.display = 'none';
+  document.getElementById('scoreTab').style.display = 'block';
+  const percent = (score / total) * 100;
+  document.getElementById('scoreSummary').innerHTML = `Score: ${percent.toFixed(2)}%<br>${wrongChoices.length ? 'Wrong: ' + wrongChoices.join(', ') : 'Perfect!'}`;
+  updateLeaderboard();
+startBotInstruction('Here is your score. Check how you did and view the top players!');
+}
+
+function updateLeaderboard() {
+  const name = document.getElementById('name').value;
+  const percent = (score / total) * 100;
+  const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+  leaderboard.push({ name, score: percent.toFixed(2), time: timeTaken });
+  leaderboard.sort((a, b) => b.score - a.score);
+  const top5 = leaderboard.slice(0, 5);
+  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+
+  document.getElementById('leaderboardContent').innerHTML = '<h3>Top 5 Players</h3>' +
+    top5.map(e => `<p>${e.name}: ${e.score}% - ${e.time}s</p>`).join('') +
+    `<button onclick="exportLeaderboardCSV()">Download Leaderboard</button>`;
+}
+
+function exportLeaderboardCSV() {
+  const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+  const csv = 'Name,Score (%),Time (s)\n' +
+              leaderboard.map(e => `${e.name},${e.score},${e.time}`).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'leaderboard.csv';
+  link.click();
+}
+
+
+function restartGame() {
+  score = 0;
+  total = 0;
+  timer = 0;
+  selectedProduct = null;
+  selectedDifficulty = null;
+  wrongChoices = [];
+
+  // Stop and reset timer
+  clearInterval(countdown);
+  document.getElementById('timerBox').style.display = 'none';
+  document.getElementById('timeCount').textContent = '0';
+
+  // Reset UI
+  document.getElementById('scoreTab').style.display = 'none';
+  document.getElementById('inputSection').style.display = 'block';
+  document.getElementById('gameContent').style.display = 'none';
+  document.getElementById('gameSteps').innerHTML = '';
+}
+</script>
+
+<div id="botWrapper">
+  <img id="botImage" src="bot-animation.jpg" alt="Animated Bot">
+  <div id="instructionBot">Welcome to Build-A-Bite!</div>
+</div>
+
+<audio id="tickSound" src="tick.mp3" preload="auto"></audio>
 
 </body>
 </html>
